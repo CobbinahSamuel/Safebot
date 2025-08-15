@@ -5,6 +5,7 @@ import cookieParser from 'cookie-parser';
 import { notFound, errorHandler } from './middleware/errorMiddleware.js';
 import connectDB from './config/db.js';
 import userRoutes from './routes/userRoutes.js'
+import incidentRoutes from './routes/incidentRoutes.js';
 
 dotenv.config();
 const port = process.env.PORT || 5000;
@@ -25,6 +26,8 @@ const app = express();
  app.use(cookieParser());
  
  app.use('/api/auth', userRoutes);
+  app.use('/api/incidents', incidentRoutes);
+
 
 app.use(notFound);
 app.use(errorHandler);
