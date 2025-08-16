@@ -13,7 +13,7 @@ export default function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // ✅ Basic validation only
+    // Basic validation only
     if (!email.includes("@")) {
       setLocalError("Enter a valid email address.");
       return;
@@ -26,7 +26,7 @@ export default function Login() {
 
     setLocalError(""); // clear local validation errors
 
-    // 🔥 Call backend via AuthProvider login()
+    // Call backend via AuthProvider login()
     const success = await login(email, password);
 
     if (success) {

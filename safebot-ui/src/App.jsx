@@ -7,7 +7,6 @@ import HowItWorks from './pages/HowItWorks'
 import ReportIncident from './pages/ReportIncident'
 import AdminLogin from './pages/adminLogin'
 import AdminDashboard from './pages/AdminDashboard'
-import Login from './pages/Login'
 import { AuthProvider } from './context/AuthContex'
 
 
@@ -21,7 +20,6 @@ const App = () => {
 
         <Layout>
           <Routes>
-            <Route path="/login" element={<Login />} />
             <Route path="/Home" element={<Home />} />
             <Route path="/Analytics" element={<Analytics />} />
             <Route path="/HowItWorks" element={<HowItWorks />} />
