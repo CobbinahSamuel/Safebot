@@ -1,7 +1,9 @@
 import { Telegraf, session } from "telegraf";
 import axios from "axios";
+import dotenv from "dotenv";
+dotenv.config();
 
-const bot = new Telegraf("7697842660:AAFW1FFL6A3z5RgJ588yIAoNsxiXj9XQiWA");
+const bot = new Telegraf(process.env.TELEGRAM_TOKEN);
 
 // Enable session middleware
 bot.use(session());

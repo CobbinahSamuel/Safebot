@@ -5,8 +5,11 @@ import Home from './pages/Home'
 import Analytics from './pages/Analytics'
 import HowItWorks from './pages/HowItWorks'
 import ReportIncident from './pages/ReportIncident'
-import AdminReports from './pages/AdminReports'
+import AdminLogin from './pages/adminLogin'
+import AdminDashboard from './pages/AdminDashboard'
 import Login from './pages/Login'
+import { AuthProvider } from './context/AuthContex'
+
 
 
 
@@ -14,20 +17,20 @@ import Login from './pages/Login'
 const App = () => {
   return (
     <>
-    <Layout>
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/Home" element={<Home />} /> 
-        <Route path="/Analytics" element={<Analytics />} />
-        <Route path="/HowItWorks" element={<HowItWorks />} />
-        <Route path="/ReportIncident" element={<ReportIncident />} />
-        <Route path="/AdminReports" element={<AdminReports />} />
-    
-               
-       
+  <AuthProvider>
 
-    </Routes>
-    </Layout>
+        <Layout>
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route path="/Home" element={<Home />} />
+            <Route path="/Analytics" element={<Analytics />} />
+            <Route path="/HowItWorks" element={<HowItWorks />} />
+            <Route path="/ReportIncident" element={<ReportIncident />} />
+            <Route path="/AdminDashboard" element={<AdminDashboard />} />
+            <Route path="/AdminLogin" element={<AdminLogin />} />
+          </Routes>
+        </Layout>
+      </AuthProvider>
 
     </>
   )

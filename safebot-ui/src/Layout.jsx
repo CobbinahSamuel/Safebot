@@ -16,7 +16,7 @@ const navigationItems = [
   { title: "How It Works", url: createPageUrl("HowItWorks") },
   { title: "Analytics", url: createPageUrl("Analytics") },
   { title: "Report Incident", url: createPageUrl("ReportIncident") },
-  { title: "Admin", url: createPageUrl("AdminReports") },
+  { title: "Admin", url: createPageUrl("AdminDashboard") },
   
   
 ];
