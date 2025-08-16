@@ -22,10 +22,7 @@ const App = () => {
         <Route path="/HowItWorks" element={<HowItWorks />} />
         <Route path="/ReportIncident" element={<ReportIncident />} />
         <Route path="/AdminReports" element={<AdminReports />} />
-    
-               
-       
-
+        <Route path="/Login" element={<Login />} />
     </Routes>
     </Layout>
 

@@ -18,6 +18,17 @@ const userSchema = mongoose.Schema(
       ],
     },
     
+    indexNumber: {
+      type: String,
+      unique: true,
+      sparse: true, // Allow multiple null values but unique non-null values
+      trim: true,
+      match: [
+        /^[A-Z]{2,4}\/\d{2}\/\d{4}$/,
+        "Please enter a valid index number format (e.g., BCS/21/001)",
+      ],
+    },
+    
     password: {
       type: String,
       minLength: [8, "Password must be at least 8 characters"],
@@ -25,7 +36,7 @@ const userSchema = mongoose.Schema(
     
     role: {
       type: String,
-      default: "admin",
+      default: "users",
       enum: ["admin", "users"],
     },
     active: {
