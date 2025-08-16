@@ -4,57 +4,43 @@ import generateToken from '../utils/generateToken.js'
 
 // Register
 export const register = asyncHandler(async (req, res) => {
-  const {name, email, indexNumber, password, role} = req.body; 
+  const {name, email, password, role} = req.body; 
 
     //Validation
-    if (!name || !email || !password) {
+    if (!name || !email || !password || !role) {
         res.status(400);
         throw new Error('Please fill in all required fields');
+
     }
-    
     if (password.length < 8 ) {
         res.status(400);
         throw new Error('Password must not be less than 8 characters');
     }
 
-    // Check if user already exists by email or index number
-    const existingUser = await User.findOne({
-        $or: [
-            { email },
-            ...(indexNumber ? [{ indexNumber }] : [])
-        ]
-    }); 
+    const userExists = await User.findOne({email}); 
 
-    if (existingUser) {
-        if (existingUser.email === email) {
-            res.status(400);
-            throw new Error('A user with this email already exists');
-        }
-        if (existingUser.indexNumber === indexNumber) {
-            res.status(400);
-            throw new Error('A user with this index number already exists');
-        }
+    if (userExists) {
+        res.status(400);
+        throw new Error('User already exists');
     }
 
     const user = await User.create({
         name,
         email,
-        indexNumber,
         password,
-        role: role || "users",
+        role,
     });
 
     if(user) {
         generateToken(res, user._id)
 
-        const newUser = {
-            _id: user._id,
-            name: user.name,
-            email: user.email,
-            indexNumber: user.indexNumber,
-            role: user.role,
-        };
-        
+            const newUser = {
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+    };
+     // Log activity
         res.status(201).json(newUser);
        
     } else{
@@ -66,36 +52,32 @@ export const register = asyncHandler(async (req, res) => {
 
 // Login
 export const login = asyncHandler(async (req, res) => {
-  const {email, indexNumber, password } = req.body;
+  const {email, password } = req.body;
 
         //Validation
-        if ((!email && !indexNumber) || !password) {
+        if (!email || !password) {
             res.status(400);
-            throw new Error('Please provide either email or index number along with password');
+            throw new Error('Please fill in all required fields');
+    
         }
-        
-        // Find user by email or index number
-        let user;
-        if (email) {
-            user = await User.findOne({email});
-        } else if (indexNumber) {
-            user = await User.findOne({indexNumber});
-        }
+        //   check if user exists
+      const user = await User.findOne({email});
 
     if(user && (await user.matchPassword(password))) {
         generateToken(res, user._id);
-        const loggedInUser = {
-            _id: user._id,
-            name: user.name,
-            email: user.email,
-            indexNumber: user.indexNumber,
-            role: user.role,
-        };
-        
-        res.status(200).json(loggedInUser);
+    const loggedInUser = {
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+
+    };
+        // Log activity
+    await logActivity(user._id, "Login", "Logged into account");
+    res.status(200).json(loggedInUser);
     } else{
-        res.status(401);
-        throw new Error('Invalid credentials');
+        res.status(404);
+        throw new Error('Invalid email or password');
     }
 });
 
@@ -109,6 +91,8 @@ export const logout = asyncHandler(async (req, res) => {
         httpOnly:true,
         expires: new Date(0)
     })
+        // Log activity
+    await logActivity(req.user, "LOGOUT", {message: "User logged out"});
     
     res.status(200).json({ message: 'Logged out Successfully'});
 
