@@ -4,8 +4,9 @@ import dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
 import { notFound, errorHandler } from './middleware/errorMiddleware.js';
 import connectDB from './config/db.js';
-import userRoutes from './routes/userRoutes.js'
+import userRoutes from './routes/adminRoutes.js'
 import incidentRoutes from './routes/incidentRoutes.js';
+import authRoutes from './routes/authRoutes.js';
 import bot from './bot/bot.js';
 
 dotenv.config();
@@ -26,8 +27,9 @@ const app = express();
 
  app.use(cookieParser());
  
- app.use('/api/auth', userRoutes);
+ app.use('/api/users', userRoutes);
   app.use('/api/incidents', incidentRoutes);
+  app.use('/api/auth', authRoutes);
 
 
 app.use(notFound);

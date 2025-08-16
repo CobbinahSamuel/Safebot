@@ -54,7 +54,7 @@ const categoryColors = {
   other: "bg-purple-500/20 text-purple-400"
 };
 
-export default function AdminReports() {
+export default function AdminDashboard() {
   const [user, setUser] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(true);
   const [loginData, setLoginData] = useState({ email: "", indexNumber: "" });
