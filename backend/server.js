@@ -8,6 +8,7 @@ import userRoutes from './routes/adminRoutes.js';
 import incidentRoutes from './routes/incidentRoutes.js';
 import authRoutes from './routes/authRoutes.js';
 import bot from './bot/bot.js';
+import adminRoutes from './routes/adminRoutes.js';
 
 dotenv.config();
 const port = process.env.PORT || 5000;
@@ -24,9 +25,16 @@ app.use(cors({
   credentials: true,
 }));
 
+
+ app.use(cookieParser());
+ 
+ app.use('/api/admin', adminRoutes);
+  app.use('/api/incidents', incidentRoutes);
+  app.use('/api/auth', authRoutes);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true })); 
 app.use(cookieParser());
+
 
 // API Routes
 app.use('/api/users', userRoutes);

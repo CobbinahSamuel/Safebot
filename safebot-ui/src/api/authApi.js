@@ -16,7 +16,7 @@ const authApi = {
    */
   loginAdmin: async (email, password) => {
     try {
-      const response = await axios.post(`${API_BASE_URL}/api/auth/login`, { email, password });
+      const response = await axios.post(`http://localhost:5000/api/admin/login`, { email, password });
       return response.data; // Axios wraps the actual response data in a 'data' property
     } catch (error) {
       // Axios errors have a 'response' property for HTTP errors
@@ -40,7 +40,7 @@ const authApi = {
    */
   logoutAdmin: async () => {
     try {
-      const response = await axios.post(`${API_BASE_URL}/api/auth/logout`);
+      const response = await axios.post(`${API_BASE_URL}/api/admin/logout`);
       return response.data;
     } catch (error) {
       console.error('Logout API Error:', error);
