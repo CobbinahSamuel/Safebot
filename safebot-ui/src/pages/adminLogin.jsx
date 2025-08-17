@@ -29,13 +29,8 @@ export default function Login() {
     // Call backend via AuthProvider login()
     const success = await login(email, password);
 
-    if (success) {
-      // role-based navigation
-      if (isAdmin) {
-        navigate("/AdminDashboard");
-      } else {
-        navigate("/Home");
-      }
+    if (success) {     
+        navigate("/Analytics");      
     }
     // If not success, error message will come from AuthContext.error
   };

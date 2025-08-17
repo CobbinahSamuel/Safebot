@@ -24,22 +24,18 @@ app.use(cors({
   origin: process.env.FRONTEND_URL || 'http://localhost:5173',
   credentials: true,
 }));
-
+app.use(express.json());
+app.use(express.urlencoded({ extended: true })); 
 
  app.use(cookieParser());
  
  app.use('/api/admin', adminRoutes);
   app.use('/api/incidents', incidentRoutes);
   app.use('/api/auth', authRoutes);
-app.use(express.json());
-app.use(express.urlencoded({ extended: true })); 
-app.use(cookieParser());
 
 
-// API Routes
-app.use('/api/users', userRoutes);
-app.use('/api/incidents', incidentRoutes);
-app.use('/api/auth', authRoutes);
+
+
 
 // Error handlers
 app.use(notFound);
