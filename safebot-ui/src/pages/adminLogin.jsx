@@ -24,7 +24,7 @@ export default function Login() {
       return;
     }
 
-    setLocalError(""); // clear local validation errors
+    setLocalError(""); 
 
     // Call backend via AuthProvider login()
     const success = await login(email, password);

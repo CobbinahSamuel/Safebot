@@ -33,21 +33,17 @@ app.use(express.urlencoded({ extended: true }));
   app.use('/api/incidents', incidentRoutes);
   app.use('/api/auth', authRoutes);
 
-
-
-
-
 // Error handlers
 app.use(notFound);
 app.use(errorHandler);
 
-app.listen(port, () => console.log(`🚀 Server started on port ${port}`));
+app.listen(port, () => console.log(`Server started on port ${port}`));
 
-// ✅ Ensure bot launches with correct token
+//  Ensure bot launches with correct token
 if (BOT_TOKEN) {
   bot.launch()
-    .then(() => console.log("🤖 Telegram bot running!"))
-    .catch(err => console.error("❌ Failed to launch bot:", err));
+    .then(() => console.log("Telegram bot running!"))
+    .catch(err => console.error(" Failed to launch bot:", err));
 } else {
-  console.error("⚠️ Telegram bot token missing. Bot not started.");
+  console.error("Telegram bot token missing. Bot not started.");
 }
