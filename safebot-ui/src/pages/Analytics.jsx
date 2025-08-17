@@ -8,8 +8,6 @@ import {
   CheckCircle, 
   AlertTriangle,
   Users,
-  MapPin,
-  Calendar,
   Activity
 } from "lucide-react";
 
@@ -36,18 +34,6 @@ const StatCard = ({ title, value, subtitle, icon: Icon, trend, color, iconColor 
   </Card>
 );
 
-const CategoryCard = ({ category, count, percentage, color }) => (
-  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200/80">
-    <div className="flex items-center gap-3">
-      <div className={`w-3 h-3 ${color} rounded-full`}></div>
-      <span className="text-gray-800 font-medium capitalize">{category.replace('_', ' ')}</span>
-    </div>
-    <div className="text-right">
-      <p className="text-gray-900 font-bold">{count}</p>
-      <p className="text-gray-500 text-sm">{percentage}%</p>
-    </div>
-  </div>
-);
 
 export default function Analytics() {
   const [reports, setReports] = useState([]);
@@ -85,19 +71,6 @@ export default function Analytics() {
   const averageResponseTime = reports.reduce((sum, r) => sum + (r.response_time || 0), 0) / totalReports || 0;
   const successRate = totalReports > 0 ? Math.round((resolvedReports / totalReports) * 100) : 0;
 
-  const categoryBreakdown = reports.reduce((acc, report) => {
-    acc[report.category] = (acc[report.category] || 0) + 1;
-    return acc;
-  }, {});
-
-  const categoryData = Object.entries(categoryBreakdown).map(([category, count]) => ({
-    category,
-    count,
-    percentage: Math.round((count / totalReports) * 100) || 0
-  }));
-
-  const colors = [ 'bg-green-500', 'bg-blue-500', 'bg-orange-500', 'bg-red-500', 'bg-purple-500', 'bg-yellow-500', 'bg-teal-500' ];
-
   return (
     <div className="bg-white py-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -124,38 +97,6 @@ export default function Analytics() {
           <StatCard title="Active Users" value="1,247" subtitle="Registered students" icon={Users} trend="+156 this week" color="text-gray-800" iconColor="bg-gray-100" />
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <Card className="bg-white border border-gray-200/80 shadow-sm">
-            <CardHeader>
-              <CardTitle className="text-gray-900 text-xl">Incident Categories</CardTitle>
-              <p className="text-gray-500">Breakdown by report type</p>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {categoryData.map((item, index) => ( <CategoryCard key={item.category} category={item.category} count={item.count} percentage={item.percentage} color={colors[index % colors.length]} /> ))}
-            </CardContent>
-          </Card>
-
-          <Card className="bg-white border border-gray-200/80 shadow-sm">
-            <CardHeader>
-              <CardTitle className="text-gray-900 text-xl">Response Metrics</CardTitle>
-              <p className="text-gray-500">Performance indicators</p>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div>
-                <div className="flex justify-between items-center mb-2"> <span className="text-gray-600">Under 5 minutes</span> <span className="text-green-600 font-bold">67%</span> </div>
-                <div className="w-full bg-gray-200 rounded-full h-2"> <div className="bg-green-500 h-2 rounded-full" style={{ width: '67%' }}></div> </div>
-              </div>
-              <div>
-                <div className="flex justify-between items-center mb-2"> <span className="text-gray-600">5-15 minutes</span> <span className="text-yellow-500 font-bold">24%</span> </div>
-                <div className="w-full bg-gray-200 rounded-full h-2"> <div className="bg-yellow-400 h-2 rounded-full" style={{ width: '24%' }}></div> </div>
-              </div>
-              <div>
-                <div className="flex justify-between items-center mb-2"> <span className="text-gray-600">Over 15 minutes</span> <span className="text-red-500 font-bold">9%</span> </div>
-                <div className="w-full bg-gray-200 rounded-full h-2"> <div className="bg-red-400 h-2 rounded-full" style={{ width: '9%' }}></div> </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
       </div>
     </div>
   );
