@@ -26,6 +26,7 @@ const App = () => {
             <Route path="/ReportIncident" element={<ReportIncident />} />
             <Route path="/AdminDashboard" element={<AdminDashboard />} />
             <Route path="/AdminLogin" element={<AdminLogin />} />
+            
           </Routes>
         </Layout>
       </AuthProvider>

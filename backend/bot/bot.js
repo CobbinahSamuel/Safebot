@@ -1,11 +1,9 @@
 import { Telegraf, session } from "telegraf";
 import axios from "axios";
-<<<<<<< HEAD
 import dotenv from "dotenv";
+import * as crypto from 'crypto'; // <-- ADD THIS LINE
+
 dotenv.config();
-=======
-import crypto from "crypto";
->>>>>>> d003bba909b5d50ce72b5bc5d9031a1479cd73ae
 
 const bot = new Telegraf(process.env.TELEGRAM_TOKEN);
 
