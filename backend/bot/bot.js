@@ -2,7 +2,7 @@ import { Telegraf, session } from "telegraf";
 import axios from "axios";
 import crypto from "crypto";
 
-const bot = new Telegraf("7697842660:AAFW1FFL6A3z5RgJ588yIAoNsxiXj9XQiWA");
+const bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN || "7697842660:AAFW1FFL6A3z5RgJ588yIAoNsxiXj9XQiWA");
 
 // Enable session middleware
 bot.use(session());

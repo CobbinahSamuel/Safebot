@@ -214,18 +214,19 @@ export const revokeVerification = asyncHandler(async (req, res) => {
   });
 });
 
-// @desc    Add sample students for testing
-// @route   POST /api/auth/add-sample-students
+// @desc    Add test students for verification testing
+// @route   POST /api/auth/add-test-students
 // @access  Public (should be protected in production)
-export const addSampleStudents = asyncHandler(async (req, res) => {
-  const sampleStudents = [
+export const addTestStudents = asyncHandler(async (req, res) => {
+  const testStudents = [
     {
       fullName: "John Kwame Asante",
       indexNumber: "BCS/21/001",
       department: "Computer Science",
       yearOfAdmission: 2021,
       programLevel: "Bachelor",
-      email: "john.asante@umat.edu.gh"
+      email: "john.asante@umat.edu.gh",
+      status: "Active"
     },
     {
       fullName: "Sarah Akosua Mensah",
@@ -233,55 +234,33 @@ export const addSampleStudents = asyncHandler(async (req, res) => {
       department: "Electrical Engineering",
       yearOfAdmission: 2020,
       programLevel: "Bachelor",
-      email: "sarah.mensah@umat.edu.gh"
-    },
-    {
-      fullName: "Michael Kofi Osei",
-      indexNumber: "MIN/19/023",
-      department: "Mining Engineering",
-      yearOfAdmission: 2019,
-      programLevel: "Bachelor",
-      email: "michael.osei@umat.edu.gh"
-    },
-    {
-      fullName: "Grace Ama Boateng",
-      indexNumber: "GEO/21/012",
-      department: "Geological Engineering",
-      yearOfAdmission: 2021,
-      programLevel: "Bachelor",
-      email: "grace.boateng@umat.edu.gh"
-    },
-    {
-      fullName: "Emmanuel Yaw Oppong",
-      indexNumber: "MET/20/008",
-      department: "Metallurgical Engineering",
-      yearOfAdmission: 2020,
-      programLevel: "Bachelor",
-      email: "emmanuel.oppong@umat.edu.gh"
+      email: "sarah.mensah@umat.edu.gh",
+      status: "Active"
     }
   ];
 
   try {
-    // Clear existing sample data
+    // Clear existing test data
     await Student.deleteMany({
-      indexNumber: { $in: sampleStudents.map(s => s.indexNumber) }
+      indexNumber: { $in: testStudents.map(s => s.indexNumber) }
     });
 
-    // Add new sample data
-    const createdStudents = await Student.insertMany(sampleStudents);
+    // Add new test data
+    const createdStudents = await Student.insertMany(testStudents);
 
     res.status(201).json({
       success: true,
-      message: `Added ${createdStudents.length} sample students`,
+      message: `Added ${createdStudents.length} test students`,
       students: createdStudents.map(s => ({
         name: s.fullName,
         indexNumber: s.indexNumber,
         department: s.department
-      }))
+      })),
+      note: "These are the two test student accounts for verification testing"
     });
 
   } catch (error) {
     res.status(400);
-    throw new Error(`Error adding sample students: ${error.message}`);
+    throw new Error(`Error adding test students: ${error.message}`);
   }
 });

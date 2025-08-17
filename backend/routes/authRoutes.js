@@ -4,7 +4,7 @@ import {
   confirmVerification,
   getVerificationStatus,
   revokeVerification,
-  addSampleStudents
+  addTestStudents
 } from '../controllers/authController.js';
 
 const router = express.Router();
@@ -16,6 +16,6 @@ router.get('/verification-status/:chatId', getVerificationStatus);
 router.post('/revoke-verification', revokeVerification);
 
 // Development/testing routes
-router.post('/add-sample-students', addSampleStudents);
+router.post('/add-test-students', addTestStudents);
 
 export default router;

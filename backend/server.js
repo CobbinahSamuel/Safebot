@@ -7,12 +7,14 @@ import connectDB from './config/db.js';
 import userRoutes from './routes/userRoutes.js'
 import incidentRoutes from './routes/incidentRoutes.js';
 import authRoutes from './routes/authRoutes.js';
+import testRoutes from './routes/testRoutes.js';
 import bot from './bot/bot.js';
 
 dotenv.config();
 const port = process.env.PORT || 5000;
 
-connectDB();
+// Connect to MongoDB
+await connectDB();
 
 const app = express();
 
@@ -30,6 +32,7 @@ const app = express();
  app.use('/api/users', userRoutes);
   app.use('/api/incidents', incidentRoutes);
   app.use('/api/auth', authRoutes);
+  app.use('/api/test', testRoutes);
 
 
 app.use(notFound);
@@ -37,6 +40,12 @@ app.use(errorHandler);
 
 app.listen(port, () => console.log(`Server started on port ${port}`));
 
-bot.launch().then(() => console.log("Telegram bot running!"));
+// Only start bot if token is configured
+if (process.env.TELEGRAM_BOT_TOKEN) {
+  bot.launch().then(() => console.log("Telegram bot running!"))
+    .catch(err => console.log("Bot launch failed:", err.message));
+} else {
+  console.log("Telegram bot token not configured, skipping bot launch");
+}
 
 
