@@ -9,5 +9,9 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  server: {
+    // This allows Vite to be accessed from a public host like ngrok
+    host: true,
+    allowedHosts: ['.ngrok-free.app'],
+  },
 })
-

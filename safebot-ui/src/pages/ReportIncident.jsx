@@ -13,21 +13,26 @@ import { AlertTriangle, MapPin, Clock, Shield } from "lucide-react";
 import { useIncident } from "@/hooks/useIncident";
 
 const categories = [
-  { value: "Harassment", label: "Harassment" },
   { value: "Theft", label: "Theft" },
-  { value: "Medical Emergency", label: "Medical Emergency" },
-  { value: "Violence", label: "Violence" },
-  { value: "Suspicious Activity", label: "Suspicious Activity" },
-  { value: "Facility Issue", label: "Facility Issue" },
-  { value: "Other", label: "Other" }
+  { value: "Vandalism", label: "Vandalism" },
+  { value: "Assault", label: "Assault" },
+  { value: "Robbery", label: "Robbery" },
+  { value: "Sexual Harassment", label: "Sexual Harassment" },
+  { value: "Substance Abuse", label: "Substance Abuse" },
+  { value: "Unauthorized Access or Trespassing", label: "Unauthorized Access or Trespassing" }
 ];
 
 const locations = [
-  { value: "Classroom", label: "Classroom" },
-  { value: "Library", label: "Library" },
-  { value: "Cafeteria", label: "Cafeteria" },
-  { value: "Parking Lot", label: "Parking Lot" },
-  { value: "Other", label: "Other" }
+  { value: "Zion Hostel", label: "Zion Hostel" },
+  { value: "Railway Hall", label: "Railway Hall" },
+  { value: "MMOH Hostel", label: "MMOH Hostel" },
+  { value: "Victory Hostel", label: "Victory Hostel" },
+  { value: "Borger Hostel", label: "Borger Hostel" },
+  { value: "Hilton Hostel", label: "Hilton Hostel" },
+  { value: "Kojokrom", label: "Kojokrom" },
+  { value: "Essikado Town", label: "Essikado Town" },
+  { value: "BU", label: "BU" },
+  { value: "KETAN", label: "KETAN" }
 ];
 
 const urgencyLevels = [
