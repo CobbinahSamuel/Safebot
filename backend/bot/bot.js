@@ -1,332 +1,118 @@
-import { Telegraf, session } from "telegraf";
-import axios from "axios";
+// backend/bot/bot.js
+import { Telegraf, session, Markup } from "telegraf";
 import dotenv from "dotenv";
-import * as crypto from 'crypto'; // <-- ADD THIS LINE
 
 dotenv.config();
 
-const bot = new Telegraf(process.env.TELEGRAM_TOKEN);
-
-// Enable session middleware
-bot.use(session());
-
-// Generate secure session token
-function generateSessionToken() {
-  return crypto.randomBytes(32).toString('hex');
+const BOT_TOKEN = process.env.TELEGRAM_TOKEN;
+if (!BOT_TOKEN) {
+  throw new Error("❌ TELEGRAM_TOKEN is missing in .env");
 }
 
-// Store active sessions (in production, use Redis or database)
-const activeSessions = new Map();
+const bot = new Telegraf(BOT_TOKEN);
 
-// Start command - Enhanced with authentication flow
-bot.start(async (ctx) => {
-  const chatId = ctx.chat.id;
-  const userId = ctx.from.id;
-  const startPayload = ctx.startPayload;
+// ✅ Session middleware
+bot.use(session());
 
-  ctx.session = {}; // reset session for user
+// 🔧 Helper: reset flow state safely
+function resetSession(ctx) {
+  if (!ctx.session) ctx.session = {};
+  ctx.session.state = null;
+  ctx.session.incidentTitle = null;
+  ctx.session.category = null;
+  ctx.session.location = null;
+  ctx.session.whenOccurred = null;
+  ctx.session.detailedDescription = null;
+  ctx.session.wrongCount = 0; // for error tracking
+}
 
-  // Check if user is returning with verification token
-  if (startPayload && startPayload.startsWith('verified_')) {
-    const verificationToken = startPayload.replace('verified_', '');
-    
-    try {
-      // Verify the token with backend
-      const response = await axios.post(`${process.env.BACKEND_URL}/api/auth/confirm-verification`, {
-        verificationToken,
-        chatId,
-        userId
-      });
+// 🔧 Helper: ensure session initialized
+function ensureSession(ctx) {
+  if (!ctx.session) ctx.session = {};
+  if (!ctx.session.wrongCount) ctx.session.wrongCount = 0;
+}
 
-      if (response.data.verified) {
-        ctx.session.verified = true;
-        ctx.session.studentInfo = response.data.studentInfo;
-        
-        await ctx.reply(
-          `✅ *Welcome back, ${response.data.studentInfo.name}!*\n\n` +
-          `🎓 *UMaT Student Verified*\n` +
-          `📚 Index: ${response.data.studentInfo.indexNumber}\n\n` +
-          `You can now use SAFEBOT to report incidents securely.\n\n` +
-          `*Available Commands:*\n` +
-          `📝 /report - Submit an incident report\n` +
-          `📊 /status - Check your reports\n` +
-          `🆘 /emergency - Emergency contacts\n` +
-          `ℹ️ /help - Get help`,
-          { parse_mode: 'Markdown' }
-        );
-        return;
-      }
-    } catch (error) {
-      console.error('Verification confirmation error:', error);
-    }
-  }
-
-  // Check if user is already verified
-  if (ctx.session.verified) {
-    await ctx.reply(
-      `👋 *Welcome back to SAFEBOT!*\n\n` +
-      `You're already verified as a UMaT student.\n\n` +
-      `*Available Commands:*\n` +
-      `📝 /report - Submit an incident report\n` +
-      `📊 /status - Check your reports\n` +
-      `🆘 /emergency - Emergency contacts\n` +
-      `ℹ️ /help - Get help`,
-      { parse_mode: 'Markdown' }
-    );
-    return;
-  }
-
-  // New user - Start authentication flow
-  const sessionToken = generateSessionToken();
-  activeSessions.set(sessionToken, {
-    chatId,
-    userId,
-    timestamp: Date.now(),
-    expiresAt: Date.now() + (15 * 60 * 1000) // 15 minutes
-  });
-
-  const authUrl = `${process.env.FRONTEND_URL}/AdminLogin?chat_id=${chatId}&session=${sessionToken}`;
-
-  await ctx.reply(
-    `🛡️ *Welcome to UMaT SAFEBOT!*\n\n` +
-    `🎓 *University of Mines and Technology*\n` +
-    `🔒 *Campus Safety Reporting System*\n\n` +
-    `To ensure secure reporting, we need to verify that you're a UMaT student.\n\n` +
-    `*📋 Verification Process:*\n` +
-    `1️⃣ Click the button below\n` +
-    `2️⃣ Enter your student details\n` +
-    `3️⃣ Return here to start reporting\n\n` +
-    `*🔐 Your data is encrypted and secure*`,
-    {
-      parse_mode: 'Markdown',
-      reply_markup: {
-        inline_keyboard: [
-          [
-            {
-              text: '🔍 Verify Student Status',
-              url: authUrl
-            }
-          ],
-          [
-            {
-              text: '❓ Why do I need to verify?',
-              callback_data: 'why_verify'
-            }
-          ]
-        ]
-      }
-    }
+// 🟢 START command
+bot.start((ctx) => {
+  resetSession(ctx);
+  ctx.reply(
+    "👋 Welcome to SafeBot Demo!\nChoose an option:",
+    Markup.inlineKeyboard([
+      [Markup.button.callback("📝 Start Survey", "survey_start")],
+      [Markup.button.callback("ℹ️ Help", "help")]
+    ])
   );
 });
 
-// Callback query handler
-bot.on('callback_query', async (ctx) => {
-  const callbackData = ctx.callbackQuery.data;
-
-  if (callbackData === 'why_verify') {
-    await ctx.answerCbQuery();
-    await ctx.reply(
-      `🔐 *Why Student Verification is Required*\n\n` +
-      `✅ *Security:* Ensures only UMaT students can report incidents\n` +
-      `✅ *Authenticity:* Prevents false reports and spam\n` +
-      `✅ *Privacy:* Protects your identity and campus safety\n` +
-      `✅ *Trust:* Builds confidence in the reporting system\n\n` +
-      `🎓 *Your student information is:*\n` +
-      `• Encrypted and secure\n` +
-      `• Only used for verification\n` +
-      `• Never shared with third parties\n` +
-      `• Complies with data protection standards\n\n` +
-      `*Ready to verify your student status?*`,
-      { 
-        parse_mode: 'Markdown',
-        reply_markup: {
-          inline_keyboard: [
-            [
-              {
-                text: '🔍 Start Verification',
-                callback_data: 'start_verification'
-              }
-            ]
-          ]
-        }
-      }
-    );
-  }
-
-  if (callbackData === 'start_verification') {
-    await ctx.answerCbQuery();
-    // Regenerate session token for new verification attempt
-    const chatId = ctx.chat.id;
-    const userId = ctx.from.id;
-    const sessionToken = generateSessionToken();
-    
-    activeSessions.set(sessionToken, {
-      chatId,
-      userId,
-      timestamp: Date.now(),
-      expiresAt: Date.now() + (15 * 60 * 1000) // 15 minutes
-    });
-
-    const authUrl = `${process.env.AUTH_GATEWAY_URL}?chat_id=${chatId}&session=${sessionToken}`;
-    
-    await ctx.reply(
-      `🔍 *Student Verification Link*\n\n` +
-      `Click the button below to verify your UMaT student status:`,
-      {
-        parse_mode: 'Markdown',
-        reply_markup: {
-          inline_keyboard: [
-            [
-              {
-                text: '🔍 Verify Student Status',
-                url: authUrl
-              }
-            ]
-          ]
-        }
-      }
-    );
-  }
+// 🟢 Help handler
+bot.action("help", async (ctx) => {
+  await ctx.answerCbQuery(); // disappear button
+  await ctx.reply("ℹ️ This is a demo bot.\nUse the menu to navigate.");
 });
 
-// Report command - Check verification first
-bot.command("report", async (ctx) => {
-  // Check if user is verified
-  if (!ctx.session.verified) {
-    await ctx.reply(
-      `🔒 *Verification Required*\n\n` +
-      `You need to verify your UMaT student status before reporting incidents.\n\n` +
-      `Please use /start to begin the verification process.`,
-      { parse_mode: 'Markdown' }
-    );
-    return;
-  }
-
-  ctx.session.state = "title";
-  await ctx.reply(
-    `📝 *New Incident Report*\n\n` +
-    `Please provide the incident title (brief description):`,
-    { parse_mode: 'Markdown' }
-  );
+// 🟢 Survey Start
+bot.action("survey_start", async (ctx) => {
+  await ctx.answerCbQuery(); // hide clicked button
+  resetSession(ctx);
+  ctx.session.state = "q1";
+  await ctx.reply("📍 Question 1: What is your department?");
 });
 
-// Help command
-bot.command("help", async (ctx) => {
-  await ctx.reply(
-    `🆘 *SAFEBOT Help*\n\n` +
-    `*Available Commands:*\n` +
-    `🏠 /start - Start or verify student status\n` +
-    `📝 /report - Submit an incident report\n` +
-    `📊 /status - Check your reports\n` +
-    `🆘 /emergency - Emergency contacts\n` +
-    `ℹ️ /help - Show this help message\n\n` +
-    `*Emergency Contacts:*\n` +
-    `🚨 Campus Security: +233-XXX-XXXX\n` +
-    `🏥 UMaT Health Center: +233-XXX-XXXX\n` +
-    `🚓 Ghana Police: 191\n\n` +
-    `*Need immediate help?* Contact emergency services directly.`,
-    { parse_mode: 'Markdown' }
-  );
-});
-
-// Emergency command
-bot.command("emergency", async (ctx) => {
-  await ctx.reply(
-    `🚨 *EMERGENCY CONTACTS*\n\n` +
-    `*UMaT Campus:*\n` +
-    `🛡️ Campus Security: +233-312-21212\n` +
-    `🏥 Health Center: +233-312-21213\n` +
-    `📞 Main Office: +233-312-21214\n\n` +
-    `*National Emergency:*\n` +
-    `🚓 Police: 191\n` +
-    `🚑 Ambulance: 193\n` +
-    `🚒 Fire Service: 192\n\n` +
-    `*Mental Health:*\n` +
-    `🧠 Crisis Helpline: +233-XXX-CRISIS\n\n` +
-    `⚠️ *For immediate danger, call 191 directly*`,
-    { parse_mode: 'Markdown' }
-  );
-});
-
-// Status command
-bot.command("status", async (ctx) => {
-  if (!ctx.session.verified) {
-    await ctx.reply(
-      `🔒 *Verification Required*\n\n` +
-      `Please verify your student status first using /start`,
-      { parse_mode: 'Markdown' }
-    );
-    return;
-  }
-
-  // In a real implementation, fetch from database
-  await ctx.reply(
-    `📊 *Your Report Status*\n\n` +
-    `📝 Reports Submitted: 0\n` +
-    `⏳ Under Review: 0\n` +
-    `✅ Resolved: 0\n\n` +
-    `Use /report to submit a new incident.`,
-    { parse_mode: 'Markdown' }
-  );
-});
-
-// Handle all text messages
+// 🟢 Handle text answers
 bot.on("text", async (ctx) => {
+  ensureSession(ctx);
+
   const state = ctx.session.state;
 
-  if (!state) return; // ignore if not in a report flow
-
-  try {
-    if (state === "title") {
-      ctx.session.incidentTitle = ctx.message.text;
-      ctx.session.state = "category";
+  // If user is off-course
+  if (!state) {
+    ctx.session.wrongCount++;
+    if (ctx.session.wrongCount >= 3) {
+      resetSession(ctx);
       return ctx.reply(
-        "Enter category: Harassment, Theft, Medical Emergency, Violence, Suspicious Activity, Facility Issue, Other"
+        "⚠️ Too many invalid responses.\nReturning to main menu.",
+        Markup.inlineKeyboard([
+          [Markup.button.callback("📝 Start Survey", "survey_start")],
+          [Markup.button.callback("ℹ️ Help", "help")]
+        ])
       );
     }
-
-    if (state === "category") {
-      ctx.session.category = ctx.message.text;
-      ctx.session.state = "location";
-      return ctx.reply(
-        "Enter location: Classroom, Library, Cafeteria, Parking Lot, Other"
-      );
-    }
-
-    if (state === "location") {
-      ctx.session.location = ctx.message.text;
-      ctx.session.state = "whenOccurred";
-      return ctx.reply("When did this occur? (YYYY-MM-DD HH:MM)");
-    }
-
-    if (state === "whenOccurred") {
-      ctx.session.whenOccurred = ctx.message.text;
-      ctx.session.state = "description";
-      return ctx.reply("Provide detailed description:");
-    }
-
-    if (state === "description") {
-      ctx.session.detailedDescription = ctx.message.text;
-
-      // Submit to backend
-      await axios.post(`${process.env.BACKEND_URL}/api/incidents`, {
-        incidentTitle: ctx.session.incidentTitle,
-        category: ctx.session.category,
-        location: ctx.session.location,
-        whenOccurred: ctx.session.whenOccurred,
-        detailedDescription: ctx.session.detailedDescription,
-        urgencyLevel: "Medium",
-        submitAnonymously: true,
-      });
-
-      ctx.reply("Incident submitted successfully. Thank you!");
-      ctx.session = {}; // reset session after submission
-    }
-  } catch (err) {
-    console.error(err);
-    ctx.reply("Error submitting incident. Please try again.");
-    ctx.session = {}; // reset session on error
+    return ctx.reply("❌ Please use the provided buttons to continue.");
   }
+
+  // Flow states
+  if (state === "q1") {
+    ctx.session.department = ctx.message.text;
+    ctx.session.state = "q2";
+    return ctx.reply("👤 Question 2: What is your year of study?");
+  }
+
+  if (state === "q2") {
+    ctx.session.year = ctx.message.text;
+    ctx.session.state = "q3";
+    return ctx.reply("💡 Question 3: Have you witnessed any safety incident recently?");
+  }
+
+  if (state === "q3") {
+    ctx.session.incident = ctx.message.text;
+    ctx.session.state = "done";
+    return ctx.reply(
+      "✅ Thank you for completing the survey!\n\n" +
+        `📍 Department: ${ctx.session.department}\n` +
+        `👤 Year: ${ctx.session.year}\n` +
+        `💡 Incident: ${ctx.session.incident}\n\n` +
+        "Returning to main menu...",
+      Markup.inlineKeyboard([
+        [Markup.button.callback("📝 Start Survey Again", "survey_start")],
+        [Markup.button.callback("ℹ️ Help", "help")]
+      ])
+    );
+  }
+});
+
+// 🟢 Fallback for unknown commands
+bot.on("callback_query", async (ctx) => {
+  await ctx.answerCbQuery("⚠️ Invalid option. Please use menu buttons.");
 });
 
 export default bot;
