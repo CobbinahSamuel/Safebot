@@ -1,10 +1,11 @@
 import { Telegraf, session } from "telegraf";
 import axios from "axios";
 import dotenv from "dotenv";
+import * as crypto from "crypto";
 
 dotenv.config();
 
-// ✅ Factory function to create bot after environment variables are loaded
+// Factory function to create bot after environment variables are loaded
 function createBot() {
   if (!process.env.TELEGRAM_BOT_TOKEN) {
     throw new Error("TELEGRAM_BOT_TOKEN environment variable is required");
@@ -14,6 +15,14 @@ function createBot() {
 
   // Enable session middleware
   bot.use(session());
+
+  // Generate secure session token
+  function generateSessionToken() {
+    return crypto.randomBytes(32).toString("hex");
+  }
+
+  // Store active sessions (in production, use Redis or database)
+  const activeSessions = new Map();
 
   // ✅ Helper to make sure ctx.session always exists
   function ensureSession(ctx) {
@@ -91,16 +100,28 @@ function createBot() {
       return;
     }
 
-    // New user - Start authentication flow
+    // New user - Create session
     try {
-      // Create session on backend
       const sessionResponse = await axios.post(
         `${process.env.BACKEND_URL}/api/auth/create-session`,
         { chatId, userId }
       );
 
       const sessionToken = sessionResponse.data.sessionToken;
-      const authUrl = `${process.env.AUTH_GATEWAY_URL}?chat_id=${chatId}&session=${sessionToken}`;
+
+      // fallback if backend didn’t provide token
+      const finalToken = sessionToken || generateSessionToken();
+
+      if (!sessionToken) {
+        activeSessions.set(finalToken, {
+          chatId,
+          userId,
+          timestamp: Date.now(),
+          expiresAt: Date.now() + 15 * 60 * 1000,
+        });
+      }
+
+      const authUrl = `${process.env.AUTH_GATEWAY_URL}?chat_id=${chatId}&session=${finalToken}`;
 
       await ctx.reply(
         `🛡️ *Welcome to UMaT SAFEBOT!*\n\n` +
@@ -116,12 +137,7 @@ function createBot() {
           parse_mode: "Markdown",
           reply_markup: {
             inline_keyboard: [
-              [
-                {
-                  text: "🔍 Verify Student Status",
-                  url: authUrl,
-                },
-              ],
+              [{ text: "🔍 Verify Student Status", url: authUrl }],
               [
                 {
                   text: "❓ Why do I need to verify?",
@@ -164,12 +180,7 @@ function createBot() {
           parse_mode: "Markdown",
           reply_markup: {
             inline_keyboard: [
-              [
-                {
-                  text: "🔍 Start Verification",
-                  callback_data: "start_verification",
-                },
-              ],
+              [{ text: "🔍 Start Verification", callback_data: "start_verification" }],
             ],
           },
         }
@@ -180,38 +191,26 @@ function createBot() {
       await ctx.answerCbQuery();
       const chatId = ctx.chat.id;
       const userId = ctx.from.id;
+      const sessionToken = generateSessionToken();
 
-      try {
-        const sessionResponse = await axios.post(
-          `${process.env.BACKEND_URL}/api/auth/create-session`,
-          { chatId, userId }
-        );
+      activeSessions.set(sessionToken, {
+        chatId,
+        userId,
+        timestamp: Date.now(),
+        expiresAt: Date.now() + 15 * 60 * 1000,
+      });
 
-        const sessionToken = sessionResponse.data.sessionToken;
-        const authUrl = `${process.env.AUTH_GATEWAY_URL}?chat_id=${chatId}&session=${sessionToken}`;
+      const authUrl = `${process.env.AUTH_GATEWAY_URL}?chat_id=${chatId}&session=${sessionToken}`;
 
-        await ctx.reply(
-          `🔍 *Student Verification Link*\n\nClick the button below to verify your UMaT student status:`,
-          {
-            parse_mode: "Markdown",
-            reply_markup: {
-              inline_keyboard: [
-                [
-                  {
-                    text: "🔍 Verify Student Status",
-                    url: authUrl,
-                  },
-                ],
-              ],
-            },
-          }
-        );
-      } catch (error) {
-        console.error("Error starting verification:", error);
-        await ctx.reply(
-          "⚠️ Unable to start verification right now. Please try again later."
-        );
-      }
+      await ctx.reply(
+        `🔍 *Student Verification Link*\n\nClick the button below to verify your UMaT student status:`,
+        {
+          parse_mode: "Markdown",
+          reply_markup: {
+            inline_keyboard: [[{ text: "🔍 Verify Student Status", url: authUrl }]],
+          },
+        }
+      );
     }
   });
 
@@ -220,9 +219,7 @@ function createBot() {
     ensureSession(ctx);
     if (!ctx.session.verified) {
       await ctx.reply(
-        `🔒 *Verification Required*\n\n` +
-          `You need to verify your UMaT student status before reporting incidents.\n\n` +
-          `Please use /start to begin the verification process.`,
+        `🔒 *Verification Required*\n\nYou need to verify your UMaT student status before reporting incidents.\n\nPlease use /start to begin the verification process.`,
         { parse_mode: "Markdown" }
       );
       return;
@@ -237,8 +234,7 @@ function createBot() {
 
   bot.command("help", async (ctx) => {
     await ctx.reply(
-      `🆘 *SAFEBOT Help*\n\n` +
-        `*Available Commands:*\n` +
+      `🆘 *SAFEBOT Help*\n\n*Available Commands:*\n` +
         `🏠 /start - Start or verify student status\n` +
         `📝 /report - Submit an incident report\n` +
         `📊 /status - Check your reports\n` +
@@ -276,7 +272,7 @@ function createBot() {
   bot.on("text", async (ctx) => {
     ensureSession(ctx);
     const state = ctx.session.state;
-    if (!state) return; // ignore messages outside flow
+    if (!state) return;
 
     try {
       if (state === "title") {
@@ -290,9 +286,7 @@ function createBot() {
       if (state === "category") {
         ctx.session.category = ctx.message.text;
         ctx.session.state = "location";
-        return ctx.reply(
-          "Enter location: Classroom, Library, Cafeteria, Parking Lot, Other"
-        );
+        return ctx.reply("Enter location: Classroom, Library, Cafeteria, Parking Lot, Other");
       }
 
       if (state === "location") {
@@ -321,16 +315,4 @@ function createBot() {
         });
 
         ctx.reply("Incident submitted successfully. Thank you!");
-        resetSession(ctx); // clear flow
-      }
-    } catch (err) {
-      console.error(err);
-      ctx.reply("Error submitting incident. Please try again.");
-      resetSession(ctx);
-    }
-  });
-
-  return bot;
-}
-
-export default createBot;
+        resetSession(ct
