@@ -1,28 +1,40 @@
+import dotenv from 'dotenv';
+dotenv.config(); // Load environment variables first
+
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv'; 
 import cookieParser from 'cookie-parser';
 import { notFound, errorHandler } from './middleware/errorMiddleware.js';
 import connectDB from './config/db.js';
-import userRoutes from './routes/adminRoutes.js';
+import adminRoutes from './routes/adminRoutes.js';
 import incidentRoutes from './routes/incidentRoutes.js';
 import authRoutes from './routes/authRoutes.js';
-import bot from './bot/bot.js';
-import adminRoutes from './routes/adminRoutes.js';
+import testRoutes from './routes/testRoutes.js';
 
-dotenv.config();
+// Bot import (support both approaches)
+import createBot from './bot/bot.js';
+
+console.log('🚀 Starting Safebot server...');
+console.log('✅ Environment variables loaded.');
+
 const port = process.env.PORT || 5000;
+console.log(`⚡ Server will run on port ${port}.`);
 
-// ✅ Fallback for Telegram token
-const BOT_TOKEN = process.env.TELEGRAM_TOKEN || "8070044484:AAE3JziVdYMY9mQXBslUkwfbEfGUTN2FfqM";
-
-connectDB();
+// Connect to MongoDB
+console.log('🔗 Connecting to MongoDB...');
+const dbConnected = await connectDB();
+if (!dbConnected) {
+  console.error('❌ Database connection failed. Server cannot start.');
+  process.exit(1);
+}
 
 const app = express();
 
+// Allowed origins
 const allowedOrigins = [
-  "http://localhost:5173", // dev frontend
-  "https://umat-chatbot-frontend.onrender.com" // deployed frontend
+  "http://localhost:5173", // local frontend
+  "https://umat-chatbot-frontend.onrender.com", // deployed frontend
+  "https://5e39cf295eda.ngrok-free.app" // ngrok dev tunnel
 ];
 
 app.use(
@@ -37,26 +49,39 @@ app.use(
     credentials: true,
   })
 );
-app.use(express.json());
-app.use(express.urlencoded({ extended: true })); 
 
- app.use(cookieParser());
- 
- app.use('/api/admin', adminRoutes);
-  app.use('/api/incidents', incidentRoutes);
-  app.use('/api/auth', authRoutes);
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
+
+// Routes
+app.use('/api/admin', adminRoutes);
+app.use('/api/incidents', incidentRoutes);
+app.use('/api/auth', authRoutes);
+app.use('/api/test', testRoutes);
 
 // Error handlers
 app.use(notFound);
 app.use(errorHandler);
 
-app.listen(port, () => console.log(`Server started on port ${port}`));
+// Start server
+app.listen(port, () =>
+  console.log(`✅ Server is live and listening on port ${port}`)
+);
 
-//  Ensure bot launches with correct token
+// Telegram bot startup
+const BOT_TOKEN = process.env.TELEGRAM_TOKEN || process.env.TELEGRAM_BOT_TOKEN;
+
 if (BOT_TOKEN) {
-  bot.launch()
-    .then(() => console.log("Telegram bot running!"))
-    .catch(err => console.error(" Failed to launch bot:", err));
+  console.log('🤖 Telegram bot token found. Launching bot...');
+  try {
+    const bot = createBot();
+    bot.launch()
+      .then(() => console.log('✅ Telegram bot is running!'))
+      .catch(err => console.error(`❌ Bot launch failed: ${err.message}`));
+  } catch (err) {
+    console.error(`❌ Bot creation failed: ${err.message}`);
+  }
 } else {
-  console.error("Telegram bot token missing. Bot not started.");
+  console.warn('⚠️ Telegram bot token not configured. Skipping bot launch.');
 }

@@ -72,7 +72,7 @@
                                 name="indexNumber"
                                 required
                                 placeholder="e.g., BCS/21/001"
-                                pattern="^[A-Z]{2,4}\/\d{2}\/\d{4}$"
+                                pattern="^[A-Z]{2,4}\/\d{2}\/\d{3}$"
                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors uppercase"
                             />
                             <p class="text-xs text-gray-500 mt-1">Format: Department/Year/Number</p>
@@ -211,7 +211,7 @@
             
             try {
                 // Validate input format
-                const indexPattern = /^[A-Z]{2,4}\/\d{2}\/\d{4}$/;
+                const indexPattern = /^[A-Z]{2,4}\/\d{2}\/\d{3}$/;
                 if (!indexPattern.test(indexNumber)) {
                     throw new Error('Please enter a valid index number format (e.g., BCS/21/001)');
                 }

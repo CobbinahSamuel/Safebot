@@ -55,6 +55,17 @@ const incidentSchema = mongoose.Schema(
         "Please enter a valid email",
       ],
     },
+    // Current status of the incident report
+    status: {
+      type: String,
+      enum: ["pending", "investigating", "resolved", "closed"],
+      default: "pending",
+    },
+    // Response time in minutes (calculated when status changes)
+    responseTime: {
+      type: Number,
+      default: null,
+    },
     // Reference to the user who submitted the incident
   },
   {
