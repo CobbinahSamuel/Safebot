@@ -3,7 +3,7 @@
 
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:5000'; // Your API base URL, e.g., 'http://localhost:5000'
+const API_BASE_URL = 'https://umat-chatbot-backend.onrender.com'; // Your API base URL, e.g., 'http://localhost:5000'
 
 const authApi = {
   /**
