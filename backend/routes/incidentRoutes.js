@@ -37,8 +37,6 @@ incidentRoutes.put('/:id/status', protect, authorizeRoles(['admin']), updateInci
 incidentRoutes.delete('/:id', protect, authorizeRoles(['admin']), deleteIncident);
 
 
-
-
 export default incidentRoutes;
 
 

@@ -70,6 +70,7 @@ export const createIncident = asyncHandler(async (req, res) => {
 });
 
 
+
 // @desc    Get all incidents with optional filters (for analytics dashboard)
 // @route   GET /api/incidents
 // @access  Private (Admin)
