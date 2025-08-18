@@ -5,7 +5,7 @@ import Home from './pages/Home'
 import Analytics from './pages/Analytics'
 import HowItWorks from './pages/HowItWorks'
 import ReportIncident from './pages/ReportIncident'
-import AdminLogin from './pages/adminLogin'
+import AdminLogin from './pages/AdminLogin'
 import AdminDashboard from './pages/AdminDashboard'
 import { AuthProvider } from './context/AuthContex'
 
