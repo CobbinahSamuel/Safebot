@@ -6,11 +6,11 @@ import Analytics from "./pages/Analytics";
 import HowItWorks from "./pages/HowItWorks";
 import ReportIncident from "./pages/ReportIncident";
 import AdminLogin from "./pages/adminLogin";
-import AdminDashboard from "./pages/adminDashboard";
 import { AuthProvider } from "./context/AuthContex";
 
 // ✅ Import generator from utils
 import { generateMockIncidents } from "./utils/mockData";
+import AdminDashboard from "./pages/AdminDashboard";
 
 const App = () => {
   const [incidents, setIncidents] = useState([]);
