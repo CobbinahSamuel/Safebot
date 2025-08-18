@@ -38,7 +38,7 @@ export default function Layout({ children, currentPageName }) {
               </div>
               <div className="hidden sm:block">
                 <h1 className="text-xl font-bold bg-gradient-to-r from-green-500 to-green-700 bg-clip-text text-transparent">
-                  SAFEBOT
+                  UMaT-SRID Chatbot
                 </h1>
                 <p className="text-xs text-gray-500 -mt-1">Campus Safety</p>
               </div>
@@ -112,7 +112,7 @@ export default function Layout({ children, currentPageName }) {
                   <Shield className="w-5 h-5 text-white" />
                 </div>
                 <span className="text-lg font-bold bg-gradient-to-r from-green-500 to-green-700 bg-clip-text text-transparent">
-                  SAFEBOT
+                  UMaT-SRID Chatbot
                 </span>
               </div>
               <p className="text-gray-600 text-sm leading-relaxed max-w-md">
@@ -159,7 +159,7 @@ export default function Layout({ children, currentPageName }) {
 
           <div className="border-t border-gray-200 mt-8 pt-8 flex flex-col sm:flex-row justify-between items-center gap-4">
             <p className="text-gray-500 text-sm">
-              © 2025 SAFEBOT. University of Mines and Technology (UMaT-SRID)
+              © 2025 UMaT-SRID Chatbot. University of Mines and Technology (UMaT-SRID)
             </p>
             <div className="flex items-center gap-2 text-green-600 text-sm">
               <Lock className="w-4 h-4" />

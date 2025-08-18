@@ -1,7 +1,6 @@
+// /src/pages/AdminDashboard.jsx
 
-import React, { useState, useEffect } from "react";
-import { Report } from "@/entities/Report";
-import { User } from "@/entities/User";
+import React, { useState, useMemo, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -30,35 +29,22 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 
+// Color mapping
 const statusColors = {
-  pending: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
-  investigating: "bg-blue-500/20 text-blue-400 border-blue-500/30",
-  resolved: "bg-green-500/20 text-green-400 border-green-500/30",
-  closed: "bg-gray-500/20 text-gray-400 border-gray-500/30"
+  Pending: "bg-yellow-500/20 text-yellow-600 border-yellow-500/30",
+  "In Progress": "bg-blue-500/20 text-blue-600 border-blue-500/30",
+  Resolved: "bg-green-500/20 text-green-600 border-green-500/30",
+  Closed: "bg-gray-500/20 text-gray-600 border-gray-500/30"
 };
 
 const urgencyColors = {
-  low: "bg-green-500/20 text-green-400",
-  medium: "bg-yellow-500/20 text-yellow-400",
-  high: "bg-orange-500/20 text-orange-400",
-  critical: "bg-red-500/20 text-red-400"
+  Low: "bg-green-500/20 text-green-600",
+  Medium: "bg-yellow-500/20 text-yellow-600",
+  High: "bg-orange-500/20 text-orange-600",
+  Critical: "bg-red-500/20 text-red-600"
 };
 
-const categoryColors = {
-  harassment: "bg-red-500/20 text-red-400",
-  theft: "bg-orange-500/20 text-orange-400",
-  medical: "bg-blue-500/20 text-blue-400",
-  violence: "bg-red-600/20 text-red-500",
-  suspicious_activity: "bg-yellow-500/20 text-yellow-400",
-  facility_issue: "bg-green-500/20 text-green-400",
-  other: "bg-purple-500/20 text-purple-400"
-};
-
-export default function AdminDashboard() {
-  const [user, setUser] = useState(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(true);
-  const [loginData, setLoginData] = useState({ email: "", indexNumber: "" });
-  const [reports, setReports] = useState([]);
+export default function AdminDashboard({ incidents = [] }) {
   const [filteredReports, setFilteredReports] = useState([]);
   const [selectedReport, setSelectedReport] = useState(null);
   const [filters, setFilters] = useState({
@@ -69,134 +55,53 @@ export default function AdminDashboard() {
     dateFrom: "",
     dateTo: ""
   });
-  const [isLoading, setIsLoading] = useState(false);
-  const [loginError, setLoginError] = useState("");
 
+  // Apply filters whenever incidents or filters change
   useEffect(() => {
-    let isMounted = true;
-    const checkAuthentication = async () => {
-      try {
-        const currentUser = await User.me();
-        if (isMounted && currentUser.is_admin) {
-          setUser(currentUser);
-          setIsAuthenticated(true);
-        }
-      } catch (error) {
-        // User not authenticated or not admin
-      }
-    };
+    let filtered = incidents;
 
-    checkAuthentication();
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-
-  useEffect(() => {
-    let isMounted = true;
-    const loadReports = async () => {
-      try {
-        const reportData = await Report.list('-created_date', 100);
-        if (isMounted) {
-          setReports(reportData);
-        }
-      } catch (error) {
-        if (isMounted) {
-          console.error("Error loading reports:", error);
-        }
-      }
-    };
-
-    if (isAuthenticated) {
-      loadReports();
-    }
-
-    return () => {
-      isMounted = false;
-    };
-  }, [isAuthenticated]);
-
-  useEffect(() => {
-    applyFilters();
-  }, [reports, filters]);
-
-  const handleLogin = async (e) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setLoginError("");
-
-    try {
-      // In a real app, you'd validate against UMaT's system
-      // For demo purposes, we'll check if email ends with @umat.edu.gh
-      if (!loginData.email.endsWith("@umat.edu.gh")) {
-        throw new Error("Please use your UMaT email address");
-      }
-
-      // Simulate admin login
-      const currentUser = await User.me();
-      await User.updateMyUserData({
-        index_number: loginData.indexNumber,
-        is_admin: true
-      });
-
-      setUser(currentUser);
-      setIsAuthenticated(true);
-    } catch (error) {
-      setLoginError("Invalid credentials or insufficient privileges");
-    }
-
-    setIsLoading(false);
-  };
-
-  const applyFilters = () => {
-    let filtered = reports;
-
-    // Search filter
     if (filters.search) {
       filtered = filtered.filter(report =>
         report.title.toLowerCase().includes(filters.search.toLowerCase()) ||
-        report.description.toLowerCase().includes(filters.search.toLowerCase()) ||
+        report.detailedDescription.toLowerCase().includes(filters.search.toLowerCase()) ||
         report.location.toLowerCase().includes(filters.search.toLowerCase())
       );
     }
 
-    // Status filter
     if (filters.status !== "all") {
       filtered = filtered.filter(report => report.status === filters.status);
     }
 
-    // Category filter
     if (filters.category !== "all") {
       filtered = filtered.filter(report => report.category === filters.category);
     }
 
-    // Urgency filter
     if (filters.urgency !== "all") {
       filtered = filtered.filter(report => report.urgency === filters.urgency);
     }
 
-    // Date filters
     if (filters.dateFrom) {
       filtered = filtered.filter(report =>
-        new Date(report.created_date) >= new Date(filters.dateFrom)
+        new Date(report.timestamp) >= new Date(filters.dateFrom)
       );
     }
 
     if (filters.dateTo) {
       filtered = filtered.filter(report =>
-        new Date(report.created_date) <= new Date(filters.dateTo)
+        new Date(report.timestamp) <= new Date(filters.dateTo)
       );
     }
 
     setFilteredReports(filtered);
-  };
+  }, [incidents, filters]);
 
   const updateFilter = (key, value) => {
     setFilters(prev => ({ ...prev, [key]: value }));
   };
 
   const exportToCSV = () => {
+    if (filteredReports.length === 0) return;
+
     const csvData = filteredReports.map(report => ({
       ID: report.id,
       Title: report.title,
@@ -204,92 +109,27 @@ export default function AdminDashboard() {
       Status: report.status,
       Urgency: report.urgency,
       Location: report.location,
-      'Created Date': format(new Date(report.created_date), 'yyyy-MM-dd HH:mm'),
-      'Contact Email': report.anonymous ? 'Anonymous' : report.contact_email || 'N/A'
+      Date: format(new Date(report.timestamp), 'yyyy-MM-dd HH:mm'),
+      "Anonymous?": report.submitAnonymously ? "Yes" : "No"
     }));
 
     const csv = [
-      Object.keys(csvData[0]).join(','),
-      ...csvData.map(row => Object.values(row).join(','))
-    ].join('\n');
+      Object.keys(csvData[0]).join(","),
+      ...csvData.map(row => Object.values(row).join(","))
+    ].join("\n");
 
-    const blob = new Blob([csv], { type: 'text/csv' });
+    const blob = new Blob([csv], { type: "text/csv" });
     const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
-    a.download = 'safety-reports.csv';
+    a.download = "safety-reports.csv";
     a.click();
   };
-
-  if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen py-20 flex items-center justify-center bg-gray-50">
-        <div className="max-w-md mx-auto px-4">
-          <Card className="bg-white border border-gray-200/80 shadow-sm">
-            <CardHeader className="text-center">
-              <div className="w-16 h-16 bg-gradient-to-br from-green-400 to-green-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <Shield className="w-8 h-8 text-white" />
-              </div>
-              <CardTitle className="text-gray-900 text-2xl">Admin Access</CardTitle>
-              <p className="text-gray-500">Login with your UMaT credentials</p>
-            </CardHeader>
-            <CardContent>
-              {loginError && (
-                <Alert variant="destructive" className="mb-6">
-                  <AlertTriangle className="h-4 w-4" />
-                  <AlertDescription>{loginError}</AlertDescription>
-                </Alert>
-              )}
-
-              <form onSubmit={handleLogin} className="space-y-4">
-                <div>
-                  <Label htmlFor="email">UMaT Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={loginData.email}
-                    onChange={(e) => setLoginData(prev => ({ ...prev, email: e.target.value }))}
-                    placeholder="your.name@umat.edu.gh"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="indexNumber">Index Number</Label>
-                  <Input
-                    id="indexNumber"
-                    value={loginData.indexNumber}
-                    onChange={(e) => setLoginData(prev => ({ ...prev, indexNumber: e.target.value }))}
-                    placeholder="Student Index Number"
-                    required
-                  />
-                </div>
-
-                <Button
-                  type="submit"
-                  disabled={isLoading}
-                  className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700"
-                >
-                  {isLoading ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                      Authenticating...
-                    </>
-                  ) : (
-                    "Access Admin Panel"
-                  )}
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="bg-gray-50 min-h-screen py-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
         {/* Header */}
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-8">
           <div>
@@ -297,15 +137,11 @@ export default function AdminDashboard() {
               Safety Reports Dashboard
             </h1>
             <p className="text-gray-600">
-              Welcome back, {user?.full_name}. Monitor and manage campus safety incidents.
+              Manage and monitor campus safety incidents.
             </p>
           </div>
-
           <div className="flex gap-3">
-            <Button
-              onClick={exportToCSV}
-              variant="outline"
-            >
+            <Button onClick={exportToCSV} variant="outline">
               <Download className="w-4 h-4 mr-2" />
               Export CSV
             </Button>
@@ -322,6 +158,7 @@ export default function AdminDashboard() {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+              
               <div>
                 <Label>Search</Label>
                 <div className="relative">
@@ -343,10 +180,10 @@ export default function AdminDashboard() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Status</SelectItem>
-                    <SelectItem value="pending">Pending</SelectItem>
-                    <SelectItem value="investigating">Investigating</SelectItem>
-                    <SelectItem value="resolved">Resolved</SelectItem>
-                    <SelectItem value="closed">Closed</SelectItem>
+                    <SelectItem value="Pending">Pending</SelectItem>
+                    <SelectItem value="In Progress">In Progress</SelectItem>
+                    <SelectItem value="Resolved">Resolved</SelectItem>
+                    <SelectItem value="Closed">Closed</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -359,13 +196,14 @@ export default function AdminDashboard() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Categories</SelectItem>
-                    <SelectItem value="harassment">Harassment</SelectItem>
-                    <SelectItem value="theft">Theft</SelectItem>
-                    <SelectItem value="medical">Medical</SelectItem>
-                    <SelectItem value="violence">Violence</SelectItem>
-                    <SelectItem value="suspicious_activity">Suspicious Activity</SelectItem>
-                    <SelectItem value="facility_issue">Facility Issue</SelectItem>
-                    <SelectItem value="other">Other</SelectItem>
+                    {/* categories pulled from dummy data */}
+                    <SelectItem value="Theft">Theft</SelectItem>
+                    <SelectItem value="Vandalism">Vandalism</SelectItem>
+                    <SelectItem value="Assault">Assault</SelectItem>
+                    <SelectItem value="Robbery">Robbery</SelectItem>
+                    <SelectItem value="Sexual harassment">Sexual harassment</SelectItem>
+                    <SelectItem value="Substance abuse">Substance abuse</SelectItem>
+                    <SelectItem value="Unauthorized access or trespassing">Unauthorized access</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -378,10 +216,10 @@ export default function AdminDashboard() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Urgencies</SelectItem>
-                    <SelectItem value="low">Low</SelectItem>
-                    <SelectItem value="medium">Medium</SelectItem>
-                    <SelectItem value="high">High</SelectItem>
-                    <SelectItem value="critical">Critical</SelectItem>
+                    <SelectItem value="Low">Low</SelectItem>
+                    <SelectItem value="Medium">Medium</SelectItem>
+                    <SelectItem value="High">High</SelectItem>
+                    <SelectItem value="Critical">Critical</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -433,15 +271,13 @@ export default function AdminDashboard() {
                   {filteredReports.map((report) => (
                     <TableRow key={report.id} className="border-gray-200/80 hover:bg-gray-50">
                       <TableCell className="text-gray-600 font-mono">
-                        #{report.id.slice(-8)}
+                        #{report.id}
                       </TableCell>
                       <TableCell className="text-gray-800 font-medium max-w-48 truncate">
                         {report.title}
                       </TableCell>
                       <TableCell>
-                        <Badge className={`${categoryColors[report.category]} border`}>
-                          {report.category.replace('_', ' ')}
-                        </Badge>
+                        <Badge>{report.category}</Badge>
                       </TableCell>
                       <TableCell>
                         <Badge className={`${statusColors[report.status]} border`}>
@@ -453,17 +289,13 @@ export default function AdminDashboard() {
                           {report.urgency}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-gray-600">
-                        <div className="flex items-center gap-1">
-                          <MapPin className="w-3 h-3" />
-                          {report.location}
-                        </div>
+                      <TableCell className="text-gray-600 flex items-center gap-1">
+                        <MapPin className="w-3 h-3" />
+                        {report.location}
                       </TableCell>
-                      <TableCell className="text-gray-600">
-                        <div className="flex items-center gap-1">
-                          <Calendar className="w-3 h-3" />
-                          {format(new Date(report.created_date), 'MMM d, yyyy')}
-                        </div>
+                      <TableCell className="text-gray-600 flex items-center gap-1">
+                        <Calendar className="w-3 h-3" />
+                        {format(new Date(report.timestamp), 'MMM d, yyyy')}
                       </TableCell>
                       <TableCell>
                         <Button
@@ -491,7 +323,7 @@ export default function AdminDashboard() {
                 <div className="flex justify-between items-start">
                   <div>
                     <CardTitle className="text-gray-900 text-xl">{selectedReport.title}</CardTitle>
-                    <p className="text-gray-500">Report #{selectedReport.id.slice(-8)}</p>
+                    <p className="text-gray-500">Report #{selectedReport.id}</p>
                   </div>
                   <Button
                     variant="ghost"
@@ -506,9 +338,7 @@ export default function AdminDashboard() {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label className="text-gray-500">Category</Label>
-                    <Badge className={`${categoryColors[selectedReport.category]} border mt-1`}>
-                      {selectedReport.category.replace('_', ' ')}
-                    </Badge>
+                    <Badge className="mt-1">{selectedReport.category}</Badge>
                   </div>
                   <div>
                     <Label className="text-gray-500">Status</Label>
@@ -530,42 +360,23 @@ export default function AdminDashboard() {
 
                 <div>
                   <Label className="text-gray-500">Description</Label>
-                  <p className="text-gray-800 mt-2 leading-relaxed">{selectedReport.description}</p>
+                  <p className="text-gray-800 mt-2 leading-relaxed">{selectedReport.detailedDescription}</p>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label className="text-gray-500">Submitted</Label>
                     <p className="text-gray-800 mt-1">
-                      {format(new Date(selectedReport.created_date), 'MMM d, yyyy HH:mm')}
+                      {format(new Date(selectedReport.timestamp), 'MMM d, yyyy HH:mm')}
                     </p>
                   </div>
                   <div>
                     <Label className="text-gray-500">Contact</Label>
                     <p className="text-gray-800 mt-1">
-                      {selectedReport.anonymous ? "Anonymous" : selectedReport.contact_email || "N/A"}
+                      {selectedReport.submitAnonymously ? "Anonymous" : "N/A"}
                     </p>
                   </div>
                 </div>
-
-                {selectedReport.evidence_urls && selectedReport.evidence_urls.length > 0 && (
-                  <div>
-                    <Label className="text-gray-500">Evidence</Label>
-                    <div className="grid grid-cols-2 gap-2 mt-2">
-                      {selectedReport.evidence_urls.map((url, index) => (
-                        <a
-                          key={index}
-                          href={url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-green-600 hover:text-green-700 text-sm"
-                        >
-                          Evidence {index + 1}
-                        </a>
-                      ))}
-                    </div>
-                  </div>
-                )}
               </CardContent>
             </Card>
           </div>
