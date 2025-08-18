@@ -37,12 +37,12 @@ export const useIncidents = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await createIncidentAPI(incidentData);
-      setSingleIncident(response); // Store the newly created incident
+      const newIncident = await createIncidentAPI(incidentData);
+      setSingleIncident(newIncident);
+      // Automatically add the new incident to the list for real-time update
+      setIncidents(prevIncidents => [newIncident, ...prevIncidents]);
       toast.success("Incident reported successfully!");
-      // Optionally refetch all incidents to update the list if needed immediately
-      // await fetchAllIncidents(); 
-      return response;
+      return newIncident;
     } catch (err) {
       console.error("Error submitting incident:", err);
       setError(err.response?.data?.message || err.message || "Failed to submit incident.");
@@ -53,16 +53,17 @@ export const useIncidents = () => {
     }
   }, []);
 
-  // Function to update an incident's status
+  // Function to update incident status
   const updateIncidentStatus = useCallback(async (incidentId, status) => {
     setLoading(true);
     setError(null);
     try {
       const response = await updateIncidentStatusAPI(incidentId, { status });
-      // Update the incidents list in state if the update was successful
-      setIncidents(prevIncidents => 
-        prevIncidents.map(inc => 
-          inc._id === incidentId ? { ...inc, status: response.status } : inc
+      setIncidents(prevIncidents =>
+        prevIncidents.map(inc =>
+          inc._id === incidentId ? { ...inc,
+            status: response.status
+          } : inc
         )
       );
       toast.success("Incident status updated successfully!");
@@ -102,10 +103,10 @@ export const useIncidents = () => {
     loading,
     error,
     incidents, // All incidents fetched
-    singleIncident, // Result of single operations like create/get by ID
-    fetchAllIncidents,
-    submitIncident,
-    updateIncidentStatus,
-    deleteIncident,
+    singleIncident, // Result of single operations like create
+    fetchAllIncidents, // Function to refetch all incidents
+    submitIncident, // Function to submit a new incident
+    updateIncidentStatus, // Function to update an incident's status
+    deleteIncident, // Function to delete an incident
   };
 };

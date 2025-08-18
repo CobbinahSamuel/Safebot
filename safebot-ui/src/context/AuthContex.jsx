@@ -1,4 +1,3 @@
-// AuthContext.jsx
 import React, { createContext, useState, useEffect } from 'react';
 import authApi from '../api/authApi';
 
@@ -19,29 +18,33 @@ export const AuthProvider = ({ children }) => {
 
   const [isLoading, setIsLoading] = useState(false); // Indicates if an auth operation is in progress
   const [error, setError] = useState(null); // Stores any error messages
+  const [isAuthenticated, setIsAuthenticated] = useState(!!user);
 
   // Effect to synchronize user state with session storage
   useEffect(() => {
+    console.log("AuthContext: User state changed. New user:", user);
     if (user) {
       // Save user to session storage when user state changes
       sessionStorage.setItem('adminUser', JSON.stringify(user));
+      setIsAuthenticated(true);
     } else {
       // Remove user from session storage if user state is null (logged out)
       sessionStorage.removeItem('adminUser');
+      setIsAuthenticated(false);
     }
   }, [user]); // Dependency array: runs when 'user' state changes
 
-  
   const login = async (email, password) => {
     setIsLoading(true);
     setError(null); // Clear previous errors
     try {
       const userData = await authApi.loginAdmin(email, password);
-      // Update user state. Ensure 'role' is present, default to 'user' if not.
-      setUser({ ...userData, role: userData.role || 'user' });
+      // Assuming your backend returns a user object on successful login
+      setUser({ ...userData, role: 'admin' });
       setIsLoading(false);
       return true; // Login successful
     } catch (err) {
+      console.error("Login Error:", err);
       setError(err.message || 'An unexpected error occurred during login.');
       setUser(null); // Clear user on login failure
       setIsLoading(false);
@@ -58,6 +61,7 @@ export const AuthProvider = ({ children }) => {
       setIsLoading(false);
       return true; // Logout successful
     } catch (err) {
+      console.error("Logout Error:", err);
       setError(err.message || 'An unexpected error occurred during logout.');
       setIsLoading(false);
       return false; // Logout failed
@@ -70,6 +74,7 @@ export const AuthProvider = ({ children }) => {
   // Value provided by the context to consuming components
   const authContextValue = {
     user,       // Current logged-in user data (or null)
+    isAuthenticated, // Boolean: true if a user is logged in
     isAdmin,    // Boolean: true if user is admin, false otherwise
     isLoading,  // Boolean: true if an auth operation is in progress
     error,      // String: current error message (or null)

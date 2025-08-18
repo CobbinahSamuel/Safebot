@@ -11,6 +11,7 @@ import { AuthProvider } from "./context/AuthContex";
 // ✅ Import generator from utils
 import { generateMockIncidents } from "./utils/mockData";
 import AdminDashboard from "./pages/AdminDashboard";
+import { IncidentProvider } from "./context/IncidentContext";
 
 const App = () => {
   const [incidents, setIncidents] = useState([]);
@@ -24,10 +25,10 @@ const App = () => {
 
   return (
     <AuthProvider>
+      <IncidentProvider>
       <Layout>
         <Routes>
           <Route path="/Home" element={<Home />} />
-          {/* ✅ Pass incidents as props */}
           <Route path="/Analytics" element={<Analytics incidents={incidents} />} />
           <Route path="/HowItWorks" element={<HowItWorks />} />
           <Route path="/ReportIncident" element={<ReportIncident />} />
@@ -35,6 +36,7 @@ const App = () => {
           <Route path="/AdminLogin" element={<AdminLogin />} />
         </Routes>
       </Layout>
+      </IncidentProvider>
     </AuthProvider>
   );
 };

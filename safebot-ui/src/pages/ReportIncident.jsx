@@ -8,10 +8,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertTriangle, MapPin, Clock, Shield } from "lucide-react";
+import { useIncidentContext } from "../context/IncidentContext"; // Corrected import path
+import { toast } from 'react-toastify'; // Import toast for notifications
 
-// Import hook for incident submission
-import { useIncident } from "@/hooks/useIncident";
-
+// Data for incident categories, locations, and urgency levels
 const categories = [
   { value: "Theft", label: "Theft" },
   { value: "Vandalism", label: "Vandalism" },
@@ -42,7 +42,12 @@ const urgencyLevels = [
   { value: "Critical", label: "Critical" }
 ];
 
+/**
+ * Renders the Report Incident form component.
+ * This component allows users to submit a new safety incident report.
+ */
 export default function ReportIncident() {
+  // State to manage form data
   const [formData, setFormData] = useState({
     incidentTitle: "",
     category: "",
@@ -54,18 +59,31 @@ export default function ReportIncident() {
     contactEmail: ""
   });
 
-  const { submitIncident, loading, error } = useIncident();
+  // Accessing the submitIncident function and loading/error states from the context
+  const { submitIncident, loading, error } = useIncidentContext();
 
+  /**
+   * Handles changes to form input fields.
+   * @param {string} field The name of the field to update.
+   * @param {*} value The new value for the field.
+   */
   const handleInputChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
+  /**
+   * Handles the form submission.
+   * Prevents default form behavior, calls the submitIncident function,
+   * and handles success or failure with toast notifications.
+   * @param {Event} e The form submission event.
+   */
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       await submitIncident(formData);
-      alert("Incident submitted successfully!");
-      // Reset form
+      // Use a toast notification for success instead of an alert
+      toast.success("Incident submitted successfully!");
+      // Reset form after successful submission
       setFormData({
         incidentTitle: "",
         category: "",
@@ -78,6 +96,8 @@ export default function ReportIncident() {
       });
     } catch (err) {
       console.error(err);
+      // Use a toast notification for errors
+      toast.error("Failed to submit incident.");
     }
   };
 
@@ -93,6 +113,7 @@ export default function ReportIncident() {
           </p>
         </div>
 
+        {/* Display a destructive alert if there's a submission error */}
         {error && (
           <Alert variant="destructive" className="mb-8">
             <AlertTriangle className="h-4 w-4" />
@@ -100,6 +121,7 @@ export default function ReportIncident() {
           </Alert>
         )}
 
+        {/* The main form for submitting the incident report */}
         <form onSubmit={handleSubmit} className="space-y-8">
           <Card className="bg-white border border-gray-200/80 shadow-sm">
             <CardHeader>
@@ -110,7 +132,7 @@ export default function ReportIncident() {
             </CardHeader>
             <CardContent className="space-y-6">
 
-              {/* Incident Title */}
+              {/* Incident Title Input */}
               <div>
                 <Label htmlFor="incidentTitle">Incident Title</Label>
                 <Input
@@ -123,7 +145,7 @@ export default function ReportIncident() {
                 />
               </div>
 
-              {/* Category, Location, When Occurred */}
+              {/* Category, Location, and When Occurred fields in a grid */}
               <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <Label htmlFor="category">Category</Label>
@@ -176,7 +198,7 @@ export default function ReportIncident() {
                 </div>
               </div>
 
-              {/* Detailed Description */}
+              {/* Detailed Description Textarea */}
               <div>
                 <Label htmlFor="detailedDescription">Detailed Description</Label>
                 <Textarea
@@ -189,7 +211,7 @@ export default function ReportIncident() {
                 />
               </div>
 
-              {/* Urgency Level */}
+              {/* Urgency Level selection buttons */}
               <div>
                 <Label className="mb-4 block">Urgency Level</Label>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -213,7 +235,7 @@ export default function ReportIncident() {
             </CardContent>
           </Card>
 
-          {/* Privacy & Contact */}
+          {/* Privacy & Contact Section */}
           <Card className="bg-white border border-gray-200/80 shadow-sm">
             <CardHeader>
               <CardTitle className="text-gray-900 text-xl flex items-center gap-2">
