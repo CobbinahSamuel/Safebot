@@ -21,6 +21,34 @@ setInterval(() => {
   }
 }, 5 * 60 * 1000); // Clean up every 5 minutes
 
+// @desc    Create verification session
+// @route   POST /api/auth/create-session
+// @access  Public (called by bot)
+export const createSession = asyncHandler(async (req, res) => {
+  const { chatId, userId } = req.body;
+  
+  if (!chatId) {
+    res.status(400);
+    throw new Error('Chat ID is required');
+  }
+  
+  // Generate session token
+  const sessionToken = crypto.randomBytes(32).toString('hex');
+  
+  // Store session in backend's activeSessions map
+  activeSessions.set(sessionToken, {
+    chatId: chatId,
+    userId: userId,
+    timestamp: Date.now(),
+    expiresAt: Date.now() + (15 * 60 * 1000) // 15 minutes
+  });
+  
+  res.status(200).json({
+    sessionToken: sessionToken,
+    expiresAt: Date.now() + (15 * 60 * 1000)
+  });
+});
+
 // @desc    Verify student credentials
 // @route   POST /api/auth/verify-student
 // @access  Public
@@ -40,7 +68,8 @@ export const verifyStudent = asyncHandler(async (req, res) => {
     throw new Error('Invalid or expired session');
   }
 
-  if (session.chatId !== chatId) {
+  // Handle chatId type conversion (form sends string, bot stores number)
+  if (session.chatId != chatId) {
     res.status(400);
     throw new Error('Session mismatch');
   }

@@ -1,5 +1,6 @@
 import express from 'express';
 import {
+  createSession,
   verifyStudent,
   confirmVerification,
   getVerificationStatus,
@@ -10,6 +11,7 @@ import {
 const router = express.Router();
 
 // Student verification routes
+router.post('/create-session', createSession);
 router.post('/verify-student', verifyStudent);
 router.post('/confirm-verification', confirmVerification);
 router.get('/verification-status/:chatId', getVerificationStatus);

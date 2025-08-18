@@ -2,18 +2,18 @@ import { Telegraf, session } from "telegraf";
 import axios from "axios";
 import crypto from "crypto";
 
-const bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN || "7697842660:AAFW1FFL6A3z5RgJ588yIAoNsxiXj9XQiWA");
+// Factory function to create bot after environment variables are loaded
+function createBot() {
+  if (!process.env.TELEGRAM_BOT_TOKEN) {
+    throw new Error('TELEGRAM_BOT_TOKEN environment variable is required');
+  }
+  
+  const bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN);
 
 // Enable session middleware
 bot.use(session());
 
-// Generate secure session token
-function generateSessionToken() {
-  return crypto.randomBytes(32).toString('hex');
-}
-
-// Store active sessions (in production, use Redis or database)
-const activeSessions = new Map();
+// Note: Session management is now handled by the backend API
 
 // Start command - Enhanced with authentication flow
 bot.start(async (ctx) => {
@@ -74,15 +74,15 @@ bot.start(async (ctx) => {
   }
 
   // New user - Start authentication flow
-  const sessionToken = generateSessionToken();
-  activeSessions.set(sessionToken, {
-    chatId,
-    userId,
-    timestamp: Date.now(),
-    expiresAt: Date.now() + (15 * 60 * 1000) // 15 minutes
-  });
-
-  const authUrl = `${process.env.AUTH_GATEWAY_URL}?chat_id=${chatId}&session=${sessionToken}`;
+  try {
+    // Create session on backend
+    const sessionResponse = await axios.post(`${process.env.BACKEND_URL}/api/auth/create-session`, {
+      chatId: chatId,
+      userId: userId
+    });
+    
+    const sessionToken = sessionResponse.data.sessionToken;
+    const authUrl = `${process.env.AUTH_GATEWAY_URL}?chat_id=${chatId}&session=${sessionToken}`;
 
   await ctx.reply(
     `🛡️ *Welcome to UMaT SAFEBOT!*\n\n` +
@@ -114,6 +114,14 @@ bot.start(async (ctx) => {
       }
     }
   );
+  } catch (error) {
+    console.error('Error creating session:', error);
+    await ctx.reply(
+      '⚠️ *Service Temporarily Unavailable*\n\n' +
+      'Unable to start verification process right now. Please try again in a few minutes.',
+      { parse_mode: 'Markdown' }
+    );
+  }
 });
 
 // Callback query handler
@@ -326,4 +334,7 @@ bot.on("text", async (ctx) => {
   }
 });
 
-export default bot;
+  return bot;
+}
+
+export default createBot;
