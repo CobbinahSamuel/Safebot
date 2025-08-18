@@ -85,7 +85,7 @@ bot.start(async (ctx) => {
     expiresAt: Date.now() + (15 * 60 * 1000) // 15 minutes
   });
 
-  const authUrl = `${process.env.AUTH_GATEWAY_URL}?chat_id=${chatId}&session=${sessionToken}`;
+  const authUrl = `${process.env.FRONTEND_URL}/AdminLogin?chat_id=${chatId}&session=${sessionToken}`;
 
   await ctx.reply(
     `🛡️ *Welcome to UMaT SAFEBOT!*\n\n` +
