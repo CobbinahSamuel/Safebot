@@ -3,7 +3,7 @@
 
 import axios from 'axios';
 
-const API_BASE_URL = 'https://umat-chatbot-backend.onrender.com'; // Your API base URL, e.g., 'http://localhost:5000'
+const API_BASE_URL = `${import.meta.env.VITE_BACKEND_URL}`; // Your API base URL, e.g., 'http://localhost:5000'
 
 const authApi = {
   /**
@@ -16,7 +16,7 @@ const authApi = {
    */
   loginAdmin: async (email, password) => {
     try {
-      const response = await axios.post(`http://localhost:5000/api/admin/login`, { email, password });
+      const response = await axios.post(`${API_BASE_URL}/api/admin/login`, { email, password });
       return response.data; // Axios wraps the actual response data in a 'data' property
     } catch (error) {
       // Axios errors have a 'response' property for HTTP errors
