@@ -13,7 +13,7 @@ export const IncidentProvider = ({ children }) => {
     fetchAllIncidents,
     submitIncident,
     updateIncidentStatus,
-    deleteIncident
+    deleteIncident,
   } = useIncidents();
 
   const { isAuthenticated, loading: authLoading } = useAuth();
@@ -30,13 +30,13 @@ export const IncidentProvider = ({ children }) => {
   }, [isAuthenticated, authLoading, loading, error, incidents]);
 
   useEffect(() => {
-    // This effect ensures that incidents are fetched automatically
-    // as soon as the user is authenticated.
-    if (isAuthenticated && !authLoading) {
-      console.log("Fetching incidents due to authentication status change...");
+    // Fetch incidents on component mount (for public analytics)
+    // and when user is authenticated (for admin features)
+    if (!authLoading) {
+      console.log("Fetching incidents...");
       fetchAllIncidents();
     }
-  }, [isAuthenticated, authLoading, fetchAllIncidents]);
+  }, [authLoading, fetchAllIncidents]);
 
   const contextValue = {
     loading,
@@ -60,7 +60,9 @@ export const IncidentProvider = ({ children }) => {
 export const useIncidentContext = () => {
   const context = useContext(IncidentContext);
   if (context === undefined) {
-    throw new Error("useIncidentContext must be used within an IncidentProvider");
+    throw new Error(
+      "useIncidentContext must be used within an IncidentProvider"
+    );
   }
   return context;
 };

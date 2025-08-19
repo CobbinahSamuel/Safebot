@@ -17,7 +17,7 @@ const studentSchema = mongoose.Schema(
       unique: true,
       trim: true,
       match: [
-        /^[A-Z]{2,4}\/\d{2}\/\d{4}$/,
+        /^[A-Z]{2,4}\/\d{2}\/\d{3}$/,
         "Please enter a valid index number format (e.g., BCS/21/001)",
       ],
     },

@@ -1,32 +1,30 @@
-import asyncHandler from "express-async-handler"; 
+import asyncHandler from "express-async-handler";
 import Incident from "../models/incidentModel.js"; // Import the Incident model
 
 // @desc    Get all incidents
 // @route   GET /api/incidents
 export const getIncidents = asyncHandler(async (req, res) => {
-  const { limit = 100, sort = '-createdAt' } = req.query;
-  
-  const incidents = await Incident.find({})
-    .sort(sort)
-    .limit(parseInt(limit));
-    
+  const { limit = 100, sort = "-createdAt" } = req.query;
+
+  const incidents = await Incident.find({}).sort(sort).limit(parseInt(limit));
+
   // Transform to match frontend expectations
-  const transformedIncidents = incidents.map(incident => ({
+  const transformedIncidents = incidents.map((incident) => ({
     _id: incident._id,
     title: incident.incidentTitle,
-    category: incident.category.toLowerCase().replace(' ', '_'),
+    category: incident.category.toLowerCase().replace(" ", "_"),
     description: incident.detailedDescription,
     location: incident.location,
     urgency: incident.urgencyLevel.toLowerCase(),
-    status: incident.status || 'pending',
+    status: incident.status || "pending",
     anonymous: incident.submitAnonymously,
     contact_email: incident.contactEmail,
     incident_date: incident.whenOccurred,
     created_date: incident.createdAt,
     updated_date: incident.updatedAt,
-    response_time: incident.responseTime || Math.floor(Math.random() * 60) + 5
+    response_time: incident.responseTime || Math.floor(Math.random() * 60) + 5,
   }));
-  
+
   res.json(transformedIncidents);
 });
 
@@ -43,6 +41,8 @@ export const createIncident = asyncHandler(async (req, res) => {
     urgencyLevel,
     submitAnonymously,
     contactEmail,
+    studentInfo,
+    telegramInfo,
   } = req.body;
 
   // Basic validation for required fields
@@ -75,6 +75,9 @@ export const createIncident = asyncHandler(async (req, res) => {
     submitAnonymously,
     // Only include contactEmail if it's not anonymous
     contactEmail: submitAnonymously ? undefined : contactEmail,
+    // Include student information if provided
+    studentInfo: studentInfo || undefined,
+    telegramInfo: telegramInfo || undefined,
   });
 
   if (incident) {
@@ -107,7 +110,7 @@ export const addSampleIncidents = asyncHandler(async (req, res) => {
     return res.status(200).json({
       success: true,
       message: "Sample incidents already exist in database",
-      count: existingIncidents.length
+      count: existingIncidents.length,
     });
   }
 
@@ -115,25 +118,27 @@ export const addSampleIncidents = asyncHandler(async (req, res) => {
     {
       incidentTitle: "Suspicious Activity in Library",
       category: "Other",
-      detailedDescription: "Individual acting suspiciously near computer lab, taking photos of security systems",
+      detailedDescription:
+        "Individual acting suspiciously near computer lab, taking photos of security systems",
       location: "Main Library - Computer Lab",
       whenOccurred: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
       urgencyLevel: "High",
       submitAnonymously: true,
       status: "investigating",
-      responseTime: 15
+      responseTime: 15,
     },
     {
       incidentTitle: "Harassment Incident",
       category: "Harassment",
-      detailedDescription: "Student being verbally harassed by group of individuals near dormitory entrance",
+      detailedDescription:
+        "Student being verbally harassed by group of individuals near dormitory entrance",
       location: "Dormitory Block A",
       whenOccurred: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), // 1 day ago
       urgencyLevel: "Critical",
       submitAnonymously: false,
       contactEmail: "concerned.student@umat.edu.gh",
       status: "resolved",
-      responseTime: 8
+      responseTime: 8,
     },
     {
       incidentTitle: "Theft Report",
@@ -145,7 +150,7 @@ export const addSampleIncidents = asyncHandler(async (req, res) => {
       submitAnonymously: false,
       contactEmail: "student123@umat.edu.gh",
       status: "pending",
-      responseTime: null
+      responseTime: null,
     },
     {
       incidentTitle: "Safety Violation",
@@ -156,65 +161,54 @@ export const addSampleIncidents = asyncHandler(async (req, res) => {
       urgencyLevel: "High",
       submitAnonymously: true,
       status: "resolved",
-      responseTime: 45
+      responseTime: 45,
     },
     {
       incidentTitle: "Accident Report",
       category: "Accident",
-      detailedDescription: "Student fell down stairs due to wet floor without warning signs",
+      detailedDescription:
+        "Student fell down stairs due to wet floor without warning signs",
       location: "Administration Building - Main Staircase",
       whenOccurred: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), // 5 days ago
       urgencyLevel: "Critical",
       submitAnonymously: false,
       contactEmail: "witness@umat.edu.gh",
       status: "closed",
-      responseTime: 5
+      responseTime: 5,
     },
     {
       incidentTitle: "Vandalism in Parking Area",
       category: "Other",
-      detailedDescription: "Multiple vehicles damaged with scratches and broken mirrors",
+      detailedDescription:
+        "Multiple vehicles damaged with scratches and broken mirrors",
       location: "Student Parking Lot B",
       whenOccurred: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000), // 6 days ago
       urgencyLevel: "Medium",
       submitAnonymously: true,
       status: "investigating",
-      responseTime: 30
-    }
+      responseTime: 30,
+    },
   ];
 
   try {
     const createdIncidents = await Incident.insertMany(sampleIncidents);
-    
+
     res.status(201).json({
       success: true,
       message: "Sample incidents created successfully",
       count: createdIncidents.length,
-      incidents: createdIncidents.map(incident => ({
+      incidents: createdIncidents.map((incident) => ({
         id: incident._id,
         title: incident.incidentTitle,
         category: incident.category,
         status: incident.status,
-        urgency: incident.urgencyLevel
-      }))
+        urgency: incident.urgencyLevel,
+      })),
     });
   } catch (error) {
     res.status(400);
     throw new Error("Failed to create sample incidents: " + error.message);
   }
-});
-
-
-
-// @desc    Get all incidents with optional filters (for analytics dashboard)
-// @route   GET /api/incidents
-// @access  Private (Admin)
-export const getIncidents = asyncHandler(async (req, res) => {
-  // Fetch all incidents from the database
-  const incidents = await Incident.find({}); 
-
-
-  res.status(200).json(incidents);
 });
 
 // @desc    Get single incident by ID
@@ -225,46 +219,53 @@ export const getIncidentById = asyncHandler(async (req, res) => {
 
   if (incident) {
     if (req.user) {
-      await logActivity(req.user._id, "VIEW_INCIDENT_DETAILS", `Viewed details for incident ${incident._id}.`);
+      await logActivity(
+        req.user._id,
+        "VIEW_INCIDENT_DETAILS",
+        `Viewed details for incident ${incident._id}.`
+      );
     }
     res.status(200).json(incident);
   } else {
     res.status(404);
-    throw new Error('Incident not found');
+    throw new Error("Incident not found");
   }
 });
-
 
 // @desc    Update incident status (e.g., for admin/staff to mark as resolved)
 // @route   PUT /api/incidents/:id/status
 // @access  Private (Admin)
 export const updateIncidentStatus = asyncHandler(async (req, res) => {
-  const { status } = req.body; 
+  const { status } = req.body;
 
   const incident = await Incident.findById(req.params.id);
 
   if (!incident) {
     res.status(404);
-    throw new Error('Incident not found');
+    throw new Error("Incident not found");
   }
 
   const validStatuses = ["Pending", "In Progress", "Resolved", "Closed"];
   if (!status || !validStatuses.includes(status)) {
     res.status(400);
-    throw new Error('Invalid status provided.');
+    throw new Error("Invalid status provided.");
   }
 
   incident.status = status;
   const updatedIncident = await incident.save();
 
   if (req.user) {
-    await logActivity(req.user._id, "UPDATE_INCIDENT_STATUS", `Updated status of incident ${updatedIncident._id} to ${updatedIncident.status}.`);
+    await logActivity(
+      req.user._id,
+      "UPDATE_INCIDENT_STATUS",
+      `Updated status of incident ${updatedIncident._id} to ${updatedIncident.status}.`
+    );
   }
 
   res.status(200).json({
     _id: updatedIncident._id,
     status: updatedIncident.status,
-    message: 'Incident status updated successfully.',
+    message: "Incident status updated successfully.",
   });
 });
 
@@ -276,17 +277,16 @@ export const deleteIncident = asyncHandler(async (req, res) => {
 
   if (!incident) {
     res.status(404);
-    throw new Error('Incident not found');
+    throw new Error("Incident not found");
   }
 
   // Ensure only admin can delete
-  if (req.user && req.user.role !== 'admin') {
+  if (req.user && req.user.role !== "admin") {
     res.status(403);
-    throw new Error('Not authorized to delete incidents.');
+    throw new Error("Not authorized to delete incidents.");
   }
 
   await Incident.deleteOne({ _id: req.params.id });
 
-  res.status(200).json({ message: 'Incident removed' });
+  res.status(200).json({ message: "Incident removed" });
 });
-
