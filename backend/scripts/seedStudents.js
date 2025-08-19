@@ -1,8 +1,8 @@
-import dotenv from 'dotenv';
+import dotenv from "dotenv";
 dotenv.config();
 
-import mongoose from 'mongoose';
-import Student from '../models/studentModel.js';
+import mongoose from "mongoose";
+import Student from "../models/studentModel.js";
 
 // Connect to MongoDB
 const connectDB = async () => {
@@ -11,149 +11,148 @@ const connectDB = async () => {
     console.log(`MongoDB Connected: ${conn.connection.host}`);
     return true;
   } catch (error) {
-    console.error('MongoDB connection error:', error);
+    console.error("MongoDB connection error:", error);
     process.exit(1);
   }
 };
 
 // Enhanced Students Data - Focus on names and index numbers
-// Note: All index numbers follow the format: 2-4 uppercase letters, /, 2 digits, /, 4 digits (e.g., BCS/21/0001)
+// Note: All index numbers follow the format: 2-4 uppercase letters, /, 2 digits, /, 3 digits (e.g., BCS/21/001)
 const studentsData = [
   {
     fullName: "John Kwame Asante",
-    indexNumber: "BCS/21/0001",
+    indexNumber: "BCS/21/001",
     department: "Computer Science",
     yearOfAdmission: 2021,
     programLevel: "Bachelor",
     email: "john.asante@umat.edu.gh",
-    status: "Active"
+    status: "Active",
   },
   {
-    fullName: "Sarah Akosua Mensah", 
-    indexNumber: "ELE/20/0045",
+    fullName: "Sarah Akosua Mensah",
+    indexNumber: "ENG/20/045",
     department: "Electrical Engineering",
     yearOfAdmission: 2020,
-    programLevel: "Bachelor", 
-    email: "sarah.mensah@umat.edu.gh",
-    status: "Active"
-  },
-  {
-    fullName: "Michael Kwaku Boateng",
-    indexNumber: "MIN/22/0012", 
-    department: "Mining Engineering",
-    yearOfAdmission: 2022,
     programLevel: "Bachelor",
-    email: "michael.boateng@umat.edu.gh",
-    status: "Active"
+    email: "sarah.mensah@umat.edu.gh",
+    status: "Active",
   },
   {
-    fullName: "Grace Abena Osei",
-    indexNumber: "CHE/21/0089",
-    department: "Chemical Engineering", 
+    fullName: "Michael Kofi Osei",
+    indexNumber: "MIN/19/023",
+    department: "Mining Engineering",
+    yearOfAdmission: 2019,
+    programLevel: "Bachelor",
+    email: "michael.osei@umat.edu.gh",
+    status: "Active",
+  },
+  {
+    fullName: "Grace Ama Boateng",
+    indexNumber: "GEO/21/012",
+    department: "Geological Engineering",
     yearOfAdmission: 2021,
     programLevel: "Bachelor",
-    email: "grace.osei@umat.edu.gh",
-    status: "Active"
+    email: "grace.boateng@umat.edu.gh",
+    status: "Active",
   },
   {
-    fullName: "Emmanuel Yaw Darko",
-    indexNumber: "GEO/23/0034",
-    department: "Geological Engineering",
-    yearOfAdmission: 2023,
-    programLevel: "Bachelor", 
-    email: "emmanuel.darko@umat.edu.gh",
-    status: "Active"
+    fullName: "Emmanuel Yaw Oppong",
+    indexNumber: "MET/20/008",
+    department: "Metallurgical Engineering",
+    yearOfAdmission: 2020,
+    programLevel: "Bachelor",
+    email: "emmanuel.oppong@umat.edu.gh",
+    status: "Active",
   },
   {
     fullName: "Priscilla Akua Nyame",
-    indexNumber: "ENV/22/0067", 
+    indexNumber: "ENV/22/067",
     department: "Environmental Engineering",
     yearOfAdmission: 2022,
     programLevel: "Bachelor",
-    email: "priscilla.nyame@umat.edu.gh", 
-    status: "Active"
+    email: "priscilla.nyame@umat.edu.gh",
+    status: "Active",
   },
   {
     fullName: "Kwame Nkrumah Asiedu",
-    indexNumber: "CIV/21/0078",
+    indexNumber: "CIV/21/078",
     department: "Civil Engineering",
     yearOfAdmission: 2021,
     programLevel: "Bachelor",
     email: "kwame.asiedu@umat.edu.gh",
-    status: "Active"  
+    status: "Active",
   },
   {
     fullName: "Akosua Ama Serwaa",
-    indexNumber: "BCS/22/0156", 
+    indexNumber: "BCS/22/156",
     department: "Computer Science",
     yearOfAdmission: 2022,
     programLevel: "Bachelor",
     email: "akosua.serwaa@umat.edu.gh",
-    status: "Active"
+    status: "Active",
   },
   {
-    fullName: "Yaw Berko Amponsah", 
-    indexNumber: "ELEC/20/0234",
+    fullName: "Yaw Berko Amponsah",
+    indexNumber: "ELEC/20/234",
     department: "Electronics Engineering",
     yearOfAdmission: 2020,
     programLevel: "Bachelor",
-    email: "yaw.amponsah@umat.edu.gh", 
-    status: "Active"
+    email: "yaw.amponsah@umat.edu.gh",
+    status: "Active",
   },
   {
     fullName: "Efua Akoto Mensah",
-    indexNumber: "MET/23/0098",
-    department: "Metallurgical Engineering", 
+    indexNumber: "CHE/23/098",
+    department: "Chemical Engineering",
     yearOfAdmission: 2023,
     programLevel: "Bachelor",
     email: "efua.mensah@umat.edu.gh",
-    status: "Active"
-  }
+    status: "Active",
+  },
 ];
 
 const populateStudents = async () => {
   try {
-    console.log('🌱 Starting student database population...\n');
-    
+    console.log("🌱 Starting student database population...\n");
+
     await connectDB();
-    
+
     // Check current student count
     const existingCount = await Student.countDocuments();
     console.log(`📊 Current students in database: ${existingCount}`);
-    
+
     if (existingCount > 0) {
-      console.log('🗑️  Clearing existing student records...');
+      console.log("🗑️  Clearing existing student records...");
       await Student.deleteMany({});
-      console.log('✅ Existing records cleared');
+      console.log("✅ Existing records cleared");
     }
-    
-    console.log('📚 Inserting new student records...');
+
+    console.log("📚 Inserting new student records...");
     const students = await Student.insertMany(studentsData);
     console.log(`✅ Successfully created ${students.length} student records`);
-    
-    console.log('\n🎓 Students Available for Testing:');
-    console.log('=' .repeat(50));
+
+    console.log("\n🎓 Students Available for Testing:");
+    console.log("=".repeat(50));
     students.forEach((student, index) => {
       console.log(`${index + 1}. ${student.fullName}`);
       console.log(`   Index: ${student.indexNumber}`);
       console.log(`   Department: ${student.department}`);
       console.log(`   Email: ${student.email}`);
-      console.log('');
+      console.log("");
     });
-    
-    console.log('🎯 Primary Test Accounts:');
+
+    console.log("🎯 Primary Test Accounts:");
     console.log(`   • Name: ${students[0].fullName}`);
     console.log(`   • Index: ${students[0].indexNumber}`);
-    console.log(`   • Name: ${students[1].fullName}`); 
+    console.log(`   • Name: ${students[1].fullName}`);
     console.log(`   • Index: ${students[1].indexNumber}`);
-    
-    console.log('\n🎉 Student database population completed successfully!');
-    console.log('📋 You can now test student verification with the bot.');
-    
+
+    console.log("\n🎉 Student database population completed successfully!");
+    console.log("📋 You can now test student verification with the bot.");
   } catch (error) {
-    console.error('❌ Error populating student database:', error.message);
+    console.error("❌ Error populating student database:", error.message);
     if (error.errors) {
-      Object.keys(error.errors).forEach(key => {
+      Object.keys(error.errors).forEach((key) => {
         console.error(`   • ${key}: ${error.errors[key].message}`);
       });
     }

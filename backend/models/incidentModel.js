@@ -7,13 +7,13 @@ const incidentSchema = mongoose.Schema(
     incidentTitle: {
       type: String,
       required: [true, "Please add an incident title"],
-      trim: true, 
+      trim: true,
     },
     // Category of the incident, chosen from a predefined list
     category: {
       type: String,
       required: [true, "Please select a category"],
-      enum: ["Accident", "Theft", "Harassment", "Safety Violation", "Other"], 
+      enum: ["Accident", "Theft", "Harassment", "Safety Violation", "Other"],
     },
     // Detailed description of the incident
     detailedDescription: {
@@ -46,7 +46,7 @@ const incidentSchema = mongoose.Schema(
     contactEmail: {
       type: String,
       // Only required if submitAnonymously is false
-      required: function() {
+      required: function () {
         return !this.submitAnonymously;
       },
       trim: true,
@@ -66,7 +66,38 @@ const incidentSchema = mongoose.Schema(
       type: Number,
       default: null,
     },
-    // Reference to the user who submitted the incident
+    // Reference to the student who submitted the incident
+    submittedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Student",
+      default: null,
+    },
+    // Student information (for quick access without population)
+    studentInfo: {
+      name: {
+        type: String,
+        default: null,
+      },
+      indexNumber: {
+        type: String,
+        default: null,
+      },
+      department: {
+        type: String,
+        default: null,
+      },
+    },
+    // Telegram information
+    telegramInfo: {
+      chatId: {
+        type: String,
+        default: null,
+      },
+      userId: {
+        type: String,
+        default: null,
+      },
+    },
   },
   {
     timestamps: true, // Adds createdAt and updatedAt timestamps
